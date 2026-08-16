@@ -1,8 +1,10 @@
-"""Render the player template with synthetic data and check its invariants.
+"""Offline self-checks for the skill.
 
-This runs on a bare interpreter in CI: no network, no BBC material, no
-Whisper. It only proves that the template still renders into a page that
-works offline and keeps the promises the README makes to users.
+Runs on a bare interpreter in CI: no network, no BBC material, no Whisper.
+It proves two things the README promises:
+
+  * the player template still renders into a page that works offline, and
+  * scheduled preparation recognises an episode it already built.
 """
 
 from __future__ import annotations
@@ -10,7 +12,11 @@ from __future__ import annotations
 import json
 import re
 import sys
+import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from make_lesson import NOTHING_NEW, already_built  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "assets" / "player-template.html"
@@ -65,7 +71,31 @@ def render() -> str:
             .replace("__TITLE__", lesson["episode"]["title"]))
 
 
+def check_schedule_guard() -> None:
+    """A daily schedule must not re-download a weekly episode it already has."""
+    with tempfile.TemporaryDirectory() as raw:
+        courses = Path(raw)
+        check(already_built(courses, "260813") is None,
+              "an empty course directory must not look already-built")
+        check(already_built(courses / "missing", "260813") is None,
+              "a course directory that does not exist must not raise")
+
+        (courses / "260813_who-does-the-housework.html").write_text("x", encoding="utf-8")
+        found = already_built(courses, "260813")
+        check(found is not None, "an existing course page must be recognised")
+
+        # A different episode that merely shares a prefix must not match.
+        check(already_built(courses, "2608") is None,
+              "episode ids must match in full, not by prefix")
+        check(already_built(courses, "260814") is None,
+              "a different episode must still be prepared")
+
+    check(NOTHING_NEW == "NOTHING_NEW",
+          "the scheduled run greps for this exact marker; do not rename it")
+
+
 def main() -> int:
+    check_schedule_guard()
     check(TEMPLATE.exists(), f"missing template: {TEMPLATE}")
     if failures:
         print("\n".join(failures))
@@ -113,12 +143,14 @@ def main() -> int:
           "the page must not tell users to start a local server")
 
     if failures:
-        print("selftest_render FAILED")
+        print("selftest FAILED")
         for item in failures:
             print(f"  - {item}")
         return 1
 
-    print(f"selftest_render OK  ({len(page) / 1024:.0f} KB rendered)")
+    print("selftest OK")
+    print("  · 定时备课的重复防护")
+    print(f"  · 播放页渲染（{len(page) / 1024:.0f} KB，自包含，麦克风一处申请）")
     return 0
 
 

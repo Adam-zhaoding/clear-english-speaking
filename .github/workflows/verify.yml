@@ -24,5 +24,5 @@ jobs:
           python scripts/make_lesson.py prepare --help
           python scripts/make_lesson.py build --help
 
-      - name: The player must render and stay self-contained
-        run: python scripts/selftest_render.py
+      - name: Offline self-checks (schedule guard, player rendering)
+        run: python scripts/selftest.py

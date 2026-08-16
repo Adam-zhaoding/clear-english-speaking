@@ -40,6 +40,9 @@ LIST_URL = "https://www.bbc.co.uk/learningenglish/english/features/6-minute-engl
 DOWNLOAD_HOST = "downloads.bbc.co.uk/learningenglish/"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ClearEnglish/1.0"
 
+# 定时备课看这一行判断「今天没有新一期」，不要改动它的措辞。
+NOTHING_NEW = "NOTHING_NEW"
+
 MIN_SENTENCES = 3
 MAX_SENTENCES = 5
 EDGE_PADDING = 0.12          # 句子首尾各留一点余量，避免切掉首音尾音
@@ -83,6 +86,13 @@ def http_get(url: str, binary: bool = False):
     response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=45)
     response.raise_for_status()
     return response.content if binary else response.text
+
+
+def already_built(courses_dir: Path, episode_id: str) -> Path | None:
+    """这一期是否已经有成品课程页。产物命名是 <期次>_<标题 slug>.html。"""
+    if not courses_dir.is_dir():
+        return None
+    return next(iter(sorted(courses_dir.glob(f"{episode_id}_*.html"))), None)
 
 
 def find_latest_episode() -> str:
@@ -319,6 +329,15 @@ def command_prepare(args: argparse.Namespace) -> None:
     episode = parse_episode(page_url)
     log(f"  标题：{episode.title}（{episode.episode_id}）")
 
+    # 定时备课每天都会醒来，BBC 却是每周更新一期。在下载 7MB 音频、
+    # 跑一分钟 Whisper 之前先看一眼这期是不是已经备过了。
+    if args.courses:
+        built = already_built(Path(args.courses).resolve(), episode.episode_id)
+        if built:
+            log(f"  这一期已经备过了：{built.name}")
+            log(f"{NOTHING_NEW} {episode.episode_id}")
+            return
+
     audio_path = workspace / f"{episode.episode_id}.mp3"
     pdf_path = workspace / f"{episode.episode_id}.pdf"
     if not audio_path.exists():
@@ -473,6 +492,8 @@ def main() -> None:
     prepare.add_argument("--latest", action="store_true", help="取最新一期（默认行为）")
     prepare.add_argument("--workspace", default="lesson-work", help="工作目录")
     prepare.add_argument("--model", default="base.en", help="Whisper 模型，精度不够可换 small.en")
+    prepare.add_argument("--courses", help="课程输出目录。给了就先查这一期是否已备过，"
+                                           f"备过则打印 {NOTHING_NEW} 并直接结束（定时备课用）")
     prepare.set_defaults(handler=command_prepare)
 
     build = sub.add_parser("build", help="校验草案并渲染成单文件 HTML")

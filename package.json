@@ -1,0 +1,17 @@
+{
+  "name": "english-speaking-player",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["web"],
+  "scripts": {
+    "dev": "npm --workspace web run dev",
+    "build": "npm --workspace web run build",
+    "test": "npm --workspace web run test && python -m unittest discover -s agent/tests -v",
+    "lint": "npm --workspace web run lint",
+    "agent": "python -m agent.bbc_course_agent",
+    "desktop:dev": "cd src-tauri && ..\\node_modules\\.bin\\tauri.cmd dev",
+    "desktop:build": "cd src-tauri && ..\\node_modules\\.bin\\tauri.cmd build",
+    "desktop:portable": "powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1 -NoBundle"
+  },
+  "license": "MIT"
+}

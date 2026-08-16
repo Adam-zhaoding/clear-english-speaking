@@ -1,0 +1,48 @@
+# 依赖
+node_modules/
+web/node_modules/
+
+# 构建产物
+dist/
+build/
+web/dist/
+src-tauri/target/
+src-tauri/gen/
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# 课程产物：内嵌了 BBC 官方音频，属于用户本机的个人副本，
+# 不上传、不提交、不分享（见 skill/SKILL.md「边界」）
+*.lesson.json
+lesson-work/
+courses/
+*_6_minute_english*.html
+
+# 探针的本机测试产物（含内嵌音频与本机路径）
+probe/runtime-probe.html
+probe/probe-workbuddy.json
+probe/mic-verify.html
+
+# 本机配置与密钥
+.env
+.env.*
+*.key
+*.pem
+settings.json
+!.claude/settings.json
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本机开发配置（每台机器不同）
+.claude/launch.json

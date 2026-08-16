@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="player-version" content="10">
+<title>__TITLE__ · Clear English</title>
+<style>
+  :root {
+    --paper: #f4f1e9;
+    --paper-warm: #efebe0;
+    --card: #ffffff;
+    --ink: #23241f;
+    --ink-soft: #6f6c60;
+    --ink-faint: #9b978a;
+    --moss: #1e4632;
+    --moss-mid: #2f6045;
+    --sage: #dbe7db;
+    --sage-soft: #eaf0e8;
+    --rule: #e3ded1;
+    --amber: #a5701a;
+    --amber-soft: #f6ecd8;
+    --brick: #9c3a28;
+    --font-sans: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+                 "Noto Sans SC", "Microsoft YaHei", -apple-system, sans-serif;
+    --font-num: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --font-mono: "Cascadia Mono", "JetBrains Mono", "SF Mono", Consolas, monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    display: flex; margin: 0; color: var(--ink); background: var(--paper);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+    background:
+      radial-gradient(880px 420px at 18% -8%, rgba(30, 70, 50, .07), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+  }
+
+  /* ---------------- 左栏 ---------------- */
+  .rail {
+    position: sticky; top: 0; z-index: 2; display: flex; flex-direction: column;
+    flex: 0 0 246px; height: 100vh; padding: 26px 18px 22px;
+    border-right: 1px solid var(--rule); background: var(--paper-warm);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; margin-bottom: 34px; }
+  .brand-mark {
+    display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+    color: #f2f6f0; background: var(--moss); font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  }
+  .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .nav { display: grid; gap: 3px; }
+  .nav a {
+    display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 11px;
+    color: var(--ink-soft); font-weight: 600; text-decoration: none;
+    transition: background .18s, color .18s;
+  }
+  .nav a:hover { color: var(--ink); background: rgba(30, 70, 50, .06); }
+  .nav a.is-active { color: var(--moss); background: var(--sage); }
+  .nav .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
+  .nav a.is-active .dot { background: var(--moss); }
+  .nav .count {
+    margin-left: auto; padding: 1px 8px; border-radius: 20px; background: rgba(30, 70, 50, .1);
+    color: var(--moss); font-family: var(--font-mono); font-size: 11px;
+  }
+  .rail-foot {
+    margin-top: auto; padding: 14px 12px 0; border-top: 1px solid var(--rule);
+    color: var(--ink-faint); font-family: var(--font-mono); font-size: 11px; line-height: 1.75;
+  }
+  .rail-foot a { color: var(--moss-mid); }
+
+  /* ---------------- 主区 ---------------- */
+  .sheet { position: relative; z-index: 1; flex: 1; min-width: 0; height: 100vh; overflow-y: auto; }
+  .sheet-inner { max-width: 980px; padding: 46px 56px 100px; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    color: var(--moss-mid); font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  }
+  h1 { margin: 0 0 12px; font-size: 46px; font-weight: 800; letter-spacing: -.035em; line-height: 1.08; }
+  .lede { max-width: 62ch; margin: 0 0 34px; color: var(--ink-soft); font-size: 16px; }
+
+  /* 整集播放 */
+  .listen {
+    padding: 30px 32px; margin-bottom: 42px;
+    border: 1px solid rgba(30, 70, 50, .14); border-radius: 22px; background: var(--sage-soft);
+  }
+  .listen-tag {
+    display: inline-block; padding: 3px 12px; margin-bottom: 13px; border-radius: 20px;
+    background: rgba(30, 70, 50, .12); color: var(--moss);
+    font-size: 12px; font-weight: 700; letter-spacing: .05em;
+  }
+  .listen h2 { margin: 0 0 6px; font-size: 27px; font-weight: 800; letter-spacing: -.02em; }
+  .listen-sub { margin: 0 0 22px; color: var(--ink-soft); }
+  .scrub { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .clock { color: var(--moss); font-family: var(--font-num); font-size: 19px; font-variant-numeric: tabular-nums; }
+  input[type="range"] {
+    flex: 1; min-width: 0; height: 6px; margin: 0; border-radius: 4px; cursor: pointer;
+    appearance: none; background: rgba(30, 70, 50, .18);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none; width: 17px; height: 17px; border: 3px solid #f7faf5; border-radius: 50%;
+    background: var(--moss); box-shadow: 0 1px 5px rgba(22, 52, 36, .3);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 17px; height: 17px; border: 3px solid #f7faf5; border-radius: 50%; background: var(--moss);
+  }
+  .controls, .speeds { display: flex; flex-wrap: wrap; gap: 9px; }
+  .speeds { margin-top: 14px; }
+  button {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 18px;
+    border: 1px solid rgba(30, 70, 50, .2); border-radius: 12px;
+    color: var(--moss); background: transparent; cursor: pointer; font: inherit; font-weight: 700;
+    transition: background .18s, border-color .18s, transform .12s, color .18s;
+  }
+  button:hover:not(:disabled) { background: rgba(30, 70, 50, .07); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.solid { border-color: var(--moss); color: #f3f7f1; background: var(--moss); }
+  button.solid:hover:not(:disabled) { background: var(--moss-mid); }
+  button.is-on { border-color: var(--moss); background: var(--sage); }
+  button.small { min-height: 36px; padding: 0 13px; border-radius: 10px; font-size: 13.5px; }
+  .listen-status { min-height: 22px; margin-top: 16px; color: var(--moss-mid); font-size: 13.5px; }
+
+  /* 段落标题 */
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    padding-bottom: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--rule);
+  }
+  .section-head h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.015em; }
+  .section-head .idx { color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }
+  .section-head .why { margin-left: auto; color: var(--ink-faint); font-size: 13px; }
+  section { margin-bottom: 44px; scroll-margin-top: 20px; }
+
+  /* 句卡 */
+  .cards { display: grid; gap: 18px; }
+  .card {
+    padding: 24px 26px; border: 1px solid var(--rule); border-radius: 18px; background: var(--card);
+    animation: rise .45s cubic-bezier(.2, .7, .3, 1) backwards;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(9px); } }
+  .card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 15px; }
+  .card-no { color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }
+  .badge {
+    padding: 3px 11px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: .02em;
+  }
+  .badge-a { background: #f2e7dc; color: #8a5a1e; }
+  .badge-b { background: var(--sage); color: var(--moss); }
+  .badge-c { background: #e2e6f0; color: #3f4d73; }
+  .card-time { margin-left: auto; color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; }
+
+  .sentence { margin: 0 0 14px; font-size: 21px; line-height: 1.62; letter-spacing: -.005em; }
+  .sentence.is-hidden { color: transparent; user-select: none; text-shadow: 0 0 13px rgba(35, 36, 31, .28); }
+  .word {
+    padding: 0 1px; border: 0; border-bottom: 1px dotted var(--moss-mid); border-radius: 3px;
+    background: transparent; color: inherit; font: inherit; min-height: auto; cursor: pointer;
+  }
+  .word:hover { color: var(--moss); background: rgba(30, 70, 50, .09); }
+  .focus-note {
+    display: flex; gap: 9px; padding: 12px 15px; margin-bottom: 15px;
+    border-left: 3px solid var(--moss-mid); border-radius: 0 11px 11px 0;
+    background: rgba(30, 70, 50, .06); color: var(--ink-soft); font-size: 14px;
+  }
+  .translation {
+    padding: 12px 15px; margin-bottom: 15px; border-radius: 11px;
+    background: var(--paper-warm); color: var(--ink); font-size: 15.5px; line-height: 1.66;
+  }
+  .bench { display: grid; grid-template-columns: minmax(0, 1fr) minmax(232px, .8fr); gap: 15px; margin-top: 16px; }
+  .pane { min-width: 0; padding: 15px; border: 1px solid var(--rule); border-radius: 13px; background: #fbfaf6; }
+  .pane-title {
+    margin: 0 0 11px; color: var(--ink-soft); font-size: 12px; font-weight: 800; letter-spacing: .05em;
+  }
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .opts label { display: grid; gap: 4px; color: var(--ink-soft); font-size: 12px; }
+  select {
+    min-height: 36px; padding: 0 11px; border: 1px solid var(--rule); border-radius: 10px;
+    background: var(--card); color: var(--ink); font: inherit; font-size: 13.5px; cursor: pointer;
+  }
+  .card-status { min-height: 20px; margin-top: 12px; color: var(--moss-mid); font-size: 13px; }
+  .rec-note { margin: 0 0 11px; color: var(--ink-faint); font-size: 12.5px; line-height: 1.55; }
+  .rec-player { width: 100%; margin-top: 11px; }
+
+  .notice {
+    display: flex; gap: 11px; padding: 15px 18px; margin-bottom: 24px;
+    border: 1px solid rgba(165, 112, 26, .28); border-radius: 14px;
+    background: var(--amber-soft); color: #6b4a12; font-size: 13.5px;
+  }
+  .notice strong { display: block; margin-bottom: 3px; color: #4f360b; }
+  .notice[hidden], [hidden] { display: none !important; }
+
+  /* 词义气泡 */
+  .pop {
+    position: fixed; z-index: 20; left: 50%; bottom: 28px; transform: translateX(-50%);
+    width: min(430px, calc(100% - 32px)); padding: 17px 50px 17px 19px;
+    border: 1px solid rgba(30, 70, 50, .22); border-radius: 15px; background: var(--card);
+    box-shadow: 0 20px 55px rgba(22, 52, 36, .17);
+  }
+  .pop strong { display: block; font-size: 17px; }
+  .pop span { display: block; margin-top: 5px; color: var(--ink-soft); }
+  .pop button { position: absolute; top: 9px; right: 9px; min-height: 32px; padding: 0 11px; }
+
+  .footer {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    padding-top: 22px; margin-top: 10px; border-top: 1px solid var(--rule);
+    color: var(--ink-faint); font-size: 13px;
+  }
+  .footer a { color: var(--moss-mid); }
+  kbd {
+    padding: 2px 7px; border: 1px solid var(--rule); border-radius: 5px;
+    background: var(--card); font-family: var(--font-mono); font-size: 12px;
+  }
+  .toast {
+    position: fixed; right: 26px; bottom: 26px; z-index: 30; padding: 13px 20px;
+    border-radius: 12px; background: var(--moss); color: #f2f6f0; font-weight: 700;
+    box-shadow: 0 14px 40px rgba(22, 52, 36, .28);
+    opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s;
+  }
+  .toast.is-on { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    .rail { position: static; flex: none; height: auto; }
+    .nav { grid-auto-flow: column; overflow-x: auto; }
+    .nav .count, .rail-foot { display: none; }
+    .sheet { height: auto; }
+    .sheet-inner { padding: 30px 22px 70px; }
+    h1 { font-size: 33px; }
+    .bench { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="rail">
+  <div class="brand">
+    <div class="brand-mark">CE</div>
+    <div class="brand-name">Clear English</div>
+  </div>
+  <nav class="nav" id="nav">
+    <a href="#listen" class="is-active"><span class="dot"></span>整集精听</a>
+    <a href="#shadow"><span class="dot"></span>影子跟读<span class="count" id="nav-count">—</span></a>
+    <a href="#about"><span class="dot"></span>关于本课</a>
+  </nav>
+  <div class="rail-foot">
+    <span id="foot-id">—</span><br>
+    <span id="foot-mode">—</span>
+  </div>
+</aside>
+
+<main class="sheet">
+<div class="sheet-inner">
+
+  <div class="eyebrow">✦ 你的私人听力练习册</div>
+  <h1 id="greeting">早上好。</h1>
+  <p class="lede">
+    今天不用追求听懂全部，只要把一个原来模糊的声音听清。
+    先整集盲听一遍，遇到卡住的地方回退重听；然后到下面挑一句，反复跟读到能跟上为止。
+  </p>
+
+  <div class="notice" id="offline-note" hidden>
+    <span>⚠</span>
+    <div>
+      <strong>这个浏览器不提供麦克风，页内录音用不了</strong>
+      听、变速、循环、跟读都不受影响。想录音的话，用 Chrome 或 Edge 双击打开这个文件即可。
+    </div>
+  </div>
+
+  <section id="listen">
+    <div class="listen">
+      <span class="listen-tag" id="listen-tag">整集精听</span>
+      <h2 id="episode-title">__TITLE__</h2>
+      <p class="listen-sub" id="episode-sub">BBC 6 Minute English</p>
+
+      <div class="scrub">
+        <span class="clock" id="clock">0:00</span>
+        <input type="range" id="seekbar" min="0" max="1000" value="0" step="1" aria-label="播放进度">
+        <span class="clock" id="duration">--:--</span>
+      </div>
+
+      <div class="controls">
+        <button data-seek="-10" title="后退 10 秒">↶ 10s</button>
+        <button data-seek="-5">↶ 5s</button>
+        <button class="solid" id="play">▶ 播放</button>
+        <button data-seek="5">5s ↷</button>
+        <button data-seek="10" title="前进 10 秒">10s ↷</button>
+      </div>
+      <div class="speeds" id="speeds">
+        <button class="small" data-speed="0.75">0.75×</button>
+        <button class="small is-on" data-speed="1">1.0×</button>
+        <button class="small" data-speed="1.25">1.25×</button>
+        <button class="small" data-speed="1.5">1.5×</button>
+      </div>
+      <div class="listen-status" id="listen-status">1.0× · 准备播放</div>
+    </div>
+  </section>
+
+  <section id="shadow">
+    <div class="section-head">
+      <span class="idx">跟读</span><h3>影子跟读</h3>
+      <span class="why" id="shadow-why">每次只练一句</span>
+    </div>
+    <div class="notice" id="shadow-error" hidden>
+      <span>⚠</span>
+      <div>
+        <strong>这一集没有生成逐句训练</strong>
+        整集音频仍然可以完整播放、暂停和快进快退。
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="about">
+    <div class="section-head">
+      <span class="idx">来源</span><h3>关于本课</h3>
+      <span class="why">英文原句逐字来自官方 Transcript</span>
+    </div>
+    <div class="card">
+      <div id="about-body"></div>
+      <div class="footer">
+        <span><kbd>空格</kbd> 播放/暂停 · <kbd>J</kbd> <kbd>L</kbd> ±10 秒 · <kbd>←</kbd> <kbd>→</kbd> ±5 秒</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<div class="pop" id="pop" role="dialog" aria-live="polite" hidden>
+  <button id="pop-close" aria-label="关闭">×</button>
+  <strong id="pop-word"></strong>
+  <span id="pop-meaning"></span>
+</div>
+
+<audio id="audio" preload="metadata" src="__AUDIO_SRC__"></audio>
+<div class="toast" id="toast"></div>
+
+<script type="application/json" id="lesson-data">__LESSON_JSON__</script>
+<script>
+(() => {
+  "use strict";
+
+  const lesson = JSON.parse(document.getElementById("lesson-data").textContent);
+  const audio = document.getElementById("audio");
+  const toastEl = document.getElementById("toast");
+  const sentences = (lesson.shadow && Array.isArray(lesson.shadow.sentences))
+    ? lesson.shadow.sentences : [];
+
+  /* ---------- 小工具 ---------- */
+  const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const formatTime = value => {
+    if (!Number.isFinite(value)) return "--:--";
+    const minutes = Math.floor(value / 60);
+    return minutes + ":" + Math.floor(value % 60).toString().padStart(2, "0");
+  };
+  let toastTimer = null;
+  const toast = message => {
+    toastEl.textContent = message;
+    toastEl.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("is-on"), 2400);
+  };
+
+  /* ---------- 单句训练的会话状态 ----------
+     每次启动分配一个递增 session；整集播放、变速、跳转、切换到别的句子
+     都会作废当前 session，避免两个循环抢同一个播放头。            */
+  const shadow = { session: 0, active: null, timer: null, stop: null };
+
+  const cancelShadow = (message, pause = true) => {
+    shadow.session += 1;
+    if (shadow.timer !== null) { clearTimeout(shadow.timer); shadow.timer = null; }
+    if (typeof shadow.stop === "function") { shadow.stop(); shadow.stop = null; }
+    const active = shadow.active;
+    shadow.active = null;
+    if (pause && !audio.paused) audio.pause();
+    if (active) {
+      // 只有拿到了新消息才覆盖状态，否则会把「已完成 N 轮」这类提示擦掉
+      if (message) setCardStatus(active.index, message);
+      setCardPlaying(active.index, false);
+    }
+  };
+
+  /* seek 是异步的：设完 currentTime 立刻读，可能还是旧位置。
+     不等 seeked 就挂句尾监听，会被旧位置瞬间触发，三轮循环一秒跑完。 */
+  const seekTo = time => new Promise(resolve => {
+    if (Math.abs(audio.currentTime - time) < 0.04) { resolve(); return; }
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      audio.removeEventListener("seeked", finish);
+      resolve();
+    };
+    audio.addEventListener("seeked", finish);
+    audio.currentTime = time;
+    setTimeout(finish, 1500);          // 少数容器不派发 seeked，兜底放行
+  });
+
+  /* ---------- 整集播放 ---------- */
+  const playButton = document.getElementById("play");
+  const seekbar = document.getElementById("seekbar");
+  const clock = document.getElementById("clock");
+  const durationLabel = document.getElementById("duration");
+  const listenStatus = document.getElementById("listen-status");
+  let scrubbing = false;
+  let currentRate = 1;
+
+  const renderListenStatus = note => {
+    listenStatus.textContent = currentRate.toFixed(2).replace(/0$/, "") + "× · " +
+      formatTime(audio.currentTime) + " / " + formatTime(audio.duration) + (note ? " · " + note : "");
+  };
+  const syncScrub = () => {
+    if (scrubbing || !Number.isFinite(audio.duration) || !audio.duration) return;
+    seekbar.value = String(Math.round(audio.currentTime / audio.duration * 1000));
+    clock.textContent = formatTime(audio.currentTime);
+  };
+
+  audio.addEventListener("loadedmetadata", () => {
+    durationLabel.textContent = formatTime(audio.duration);
+    renderListenStatus("");
+  });
+  audio.addEventListener("timeupdate", () => { syncScrub(); renderListenStatus(""); });
+  audio.addEventListener("play", () => { playButton.textContent = "❚❚ 暂停"; });
+  audio.addEventListener("pause", () => { playButton.textContent = "▶ 播放"; });
+  audio.addEventListener("error", () => {
+    listenStatus.textContent = "音频加载失败：请检查这个文件是否完整，或联网后重试远程音频。";
+  });
+
+  seekbar.addEventListener("input", () => {
+    scrubbing = true;
+    if (Number.isFinite(audio.duration)) {
+      clock.textContent = formatTime(Number(seekbar.value) / 1000 * audio.duration);
+    }
+  });
+  seekbar.addEventListener("change", () => {
+    cancelShadow("已切到整集播放", false);
+    if (Number.isFinite(audio.duration)) {
+      audio.currentTime = Number(seekbar.value) / 1000 * audio.duration;
+    }
+    scrubbing = false;
+  });
+
+  const togglePlay = async () => {
+    cancelShadow("已切到整集播放", false);
+    audio.playbackRate = currentRate;
+    if (audio.paused) {
+      try { await audio.play(); } catch (_) { renderListenStatus("浏览器拦下了播放，请再点一次"); }
+    } else {
+      audio.pause();
+    }
+  };
+  playButton.addEventListener("click", togglePlay);
+
+  document.querySelectorAll("[data-seek]").forEach(button => {
+    button.addEventListener("click", () => {
+      cancelShadow("已切到整集播放", false);
+      const step = Number(button.dataset.seek);
+      const end = Number.isFinite(audio.duration) ? audio.duration : Number.MAX_SAFE_INTEGER;
+      audio.currentTime = clamp(audio.currentTime + step, 0, end);
+      renderListenStatus((step > 0 ? "前进 " : "后退 ") + Math.abs(step) + " 秒");
+    });
+  });
+
+  document.getElementById("speeds").addEventListener("click", event => {
+    const button = event.target.closest("[data-speed]");
+    if (!button) return;
+    cancelShadow("已切到整集播放", false);
+    currentRate = Number(button.dataset.speed);
+    audio.playbackRate = currentRate;
+    document.querySelectorAll("#speeds [data-speed]").forEach(node => {
+      node.classList.toggle("is-on", node === button);
+    });
+    renderListenStatus("速度已调整");
+  });
+
+  /* ---------- 句尾判定：双保险 ----------
+     rAF 逐帧判定最准，但页面切到后台会被浏览器暂停；
+     timeupdate 在后台仍然工作，但间隔约 250ms。
+     两者同时挂上，谁先到谁生效，再加一道硬超时兜底。     */
+  const watchUntil = (endTime, onDone) => {
+    let settled = false;
+    let frameId = null;
+    let guardId = null;
+    const finish = reason => {
+      if (settled) return;
+      settled = true;
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      if (guardId !== null) clearTimeout(guardId);
+      audio.removeEventListener("timeupdate", onTick);
+      onDone(reason);
+    };
+    function onTick() { if (audio.currentTime >= endTime) finish("timeupdate"); }
+    const onFrame = () => {
+      if (settled) return;
+      if (audio.currentTime >= endTime) { finish("raf"); return; }
+      frameId = requestAnimationFrame(onFrame);
+    };
+    audio.addEventListener("timeupdate", onTick);
+    frameId = requestAnimationFrame(onFrame);
+    const remaining = (endTime - audio.currentTime) * 1000 / Math.max(audio.playbackRate, .1);
+    guardId = setTimeout(() => finish("guard"), Math.max(remaining, 0) + 1200);
+    return () => finish("cancelled");
+  };
+
+  /* ---------- 麦克风：整个页面只申请一次 ----------
+     每句都调 getUserMedia 会让浏览器反复弹授权框（file:// 下尤其明显，
+     它不跨页面持久化权限）。这里把 MediaStream 提到页面级持有：
+     第一次跟读时申请一次，之后所有句子复用同一条流；
+     录完只停 recorder，不停 track，等页面关闭时才真正释放。        */
+  let micStream = null;
+  let micPending = null;
+
+  const micSupported = () =>
+    !!(navigator.mediaDevices
+       && typeof navigator.mediaDevices.getUserMedia === "function"
+       && typeof window.MediaRecorder === "function");
+
+  const micLive = () =>
+    !!(micStream && micStream.getAudioTracks().some(track => track.readyState === "live"));
+
+  const ensureMicStream = () => {
+    if (micLive()) return Promise.resolve(micStream);
+    // 设备被拔掉或被系统回收后旧流已经死了，丢掉重新申请
+    if (micStream) { micStream.getTracks().forEach(track => track.stop()); micStream = null; }
+    // 连点两下不要变成两次授权框
+    if (!micPending) {
+      micPending = navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => { micStream = stream; micPending = null; return stream; })
+        .catch(error => { micPending = null; throw error; });
+    }
+    return micPending;
+  };
+
+  const recorderMime = () =>
+    ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
+      .find(type => MediaRecorder.isTypeSupported(type));
+
+  window.addEventListener("pagehide", () => {
+    if (micStream) micStream.getTracks().forEach(track => track.stop());
+  });
+
+  /* ---------- 句卡 ---------- */
+  const cardsRoot = document.getElementById("cards");
+  const cardRefs = [];
+
+  const setCardStatus = (index, message) => {
+    const card = cardRefs[index];
+    if (card) card.status.textContent = message;
+  };
+  const setCardPlaying = (index, playing) => {
+    const card = cardRefs[index];
+    if (!card) return;
+    card.toggle.textContent = playing ? "❚❚ 暂停" : "▶ 播放 / 继续";
+    card.toggle.setAttribute("aria-pressed", String(playing));
+  };
+
+  const BADGES = {
+    A: ["badge-a", "A 词不认识"],
+    B: ["badge-b", "B 认识但没听出来"],
+    C: ["badge-c", "C 听出来但没懂"]
+  };
+
+  const buildSentenceText = (container, text, glossary) => {
+    container.textContent = "";
+    const entries = (Array.isArray(glossary) ? glossary : [])
+      .filter(entry => entry && String(entry.surface || "").trim())
+      .sort((a, b) => b.surface.length - a.surface.length);
+    if (!entries.length) { container.textContent = text; return; }
+
+    // 逐段扫描，命中 glossary 的片段渲染成可点按钮
+    let rest = text;
+    let guard = 0;
+    while (rest && guard < 400) {
+      guard += 1;
+      let hitAt = -1;
+      let hitEntry = null;
+      for (const entry of entries) {
+        const at = rest.toLowerCase().indexOf(entry.surface.toLowerCase());
+        if (at >= 0 && (hitAt < 0 || at < hitAt)) { hitAt = at; hitEntry = entry; }
+      }
+      if (hitAt < 0) { container.append(document.createTextNode(rest)); break; }
+      if (hitAt > 0) container.append(document.createTextNode(rest.slice(0, hitAt)));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "word";
+      button.textContent = rest.substr(hitAt, hitEntry.surface.length);
+      button.addEventListener("click", () => openPop(button.textContent, hitEntry.meaning));
+      container.append(button);
+      rest = rest.slice(hitAt + hitEntry.surface.length);
+    }
+  };
+
+  const makeSelect = (options, initial) => {
+    const select = document.createElement("select");
+    options.forEach(([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      if (value === initial) option.selected = true;
+      select.append(option);
+    });
+    return select;
+  };
+  const makeButton = (label, className) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "small" + (className ? " " + className : "");
+    button.textContent = label;
+    return button;
+  };
+
+  const renderCard = (sentence, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animationDelay = (index * 60) + "ms";
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    const number = document.createElement("span");
+    number.className = "card-no";
+    number.textContent = "第 " + (index + 1) + " 句 / 共 " + sentences.length;
+    top.append(number);
+    (sentence.diagnosis_tags || []).forEach(tag => {
+      const config = BADGES[String(tag).toUpperCase()];
+      if (!config) return;
+      const badge = document.createElement("span");
+      badge.className = "badge " + config[0];
+      badge.textContent = config[1];
+      top.append(badge);
+    });
+    const time = document.createElement("span");
+    time.className = "card-time";
+    time.textContent = formatTime(sentence.start) + " → " + formatTime(sentence.end);
+    top.append(time);
+
+    const text = document.createElement("p");
+    text.className = "sentence";
+    buildSentenceText(text, sentence.text, sentence.glossary);
+
+    const focus = document.createElement("div");
+    focus.className = "focus-note";
+    focus.hidden = !String(sentence.listening_focus || "").trim();
+    if (!focus.hidden) {
+      const icon = document.createElement("span");
+      icon.textContent = "👂";
+      const body = document.createElement("span");
+      body.textContent = sentence.listening_focus;
+      focus.append(icon, body);
+    }
+
+    const translation = document.createElement("div");
+    translation.className = "translation";
+    translation.textContent = sentence.translation_zh || "（这一句没有生成翻译）";
+    translation.hidden = true;
+
+    // 左：原句播放
+    const left = document.createElement("section");
+    left.className = "pane";
+    const leftTitle = document.createElement("p");
+    leftTitle.className = "pane-title";
+    leftTitle.textContent = "原句播放";
+
+    const opts = document.createElement("div");
+    opts.className = "opts";
+    const speedLabel = document.createElement("label");
+    const speed = makeSelect([["0.75", "0.75×"], ["1", "1.0×"]], "1");
+    speedLabel.append(document.createTextNode("单句速度"), speed);
+    const loopLabel = document.createElement("label");
+    const loopCount = makeSelect([["1", "1 次"], ["2", "2 次"], ["3", "3 次"], ["5", "5 次"]], "3");
+    loopLabel.append(document.createTextNode("循环次数"), loopCount);
+    opts.append(speedLabel, loopLabel);
+
+    const controls = document.createElement("div");
+    controls.className = "controls";
+    const once = makeButton("播放原句");
+    const loop = makeButton("循环跟读", "solid");
+    const toggle = makeButton("▶ 播放 / 继续");
+    const stop = makeButton("停止");
+    const hide = makeButton("隐藏字幕");
+    const showTranslation = makeButton("看翻译");
+    controls.append(once, loop, toggle, stop, hide, showTranslation);
+
+    const status = document.createElement("div");
+    status.className = "card-status";
+    status.textContent = "1.0× · 默认循环 3 次";
+    left.append(leftTitle, opts, controls, status);
+
+    // 右：我的跟读
+    const right = document.createElement("section");
+    right.className = "pane";
+    const rightTitle = document.createElement("p");
+    rightTitle.className = "pane-title";
+    rightTitle.textContent = "我的跟读";
+    const note = document.createElement("p");
+    note.className = "rec-note";
+    note.textContent = "点了录音才会请求麦克风；录音只留在这个页面里，关掉就没了。";
+    const recControls = document.createElement("div");
+    recControls.className = "controls";
+    const recStart = makeButton("● 录音");
+    const recStop = makeButton("■ 停止");
+    const recPlay = makeButton("回听");
+    recStop.disabled = true;
+    recPlay.disabled = true;
+    recControls.append(recStart, recStop, recPlay);
+    const recStatus = document.createElement("div");
+    recStatus.className = "card-status";
+    recStatus.textContent = "尚未录音";
+    const recPlayer = document.createElement("audio");
+    recPlayer.className = "rec-player";
+    recPlayer.controls = true;
+    recPlayer.hidden = true;
+    right.append(rightTitle, note, recControls, recStatus, recPlayer);
+
+    const bench = document.createElement("div");
+    bench.className = "bench";
+    bench.append(left, right);
+    card.append(top, text, focus, translation, bench);
+    cardsRoot.append(card);
+
+    cardRefs.push({ card, text, translation, speed, loopCount, toggle, status,
+                    recStatus, recPlayer, recStart, recStop, recPlay, recorder: null, stream: null });
+
+    /* --- 单句播放逻辑 --- */
+    const playSentence = async times => {
+      cancelShadow("", false);
+      const session = ++shadow.session;
+      const total = Math.max(1, Number(times) || 1);
+      shadow.active = { index, session, done: 0, total };
+      audio.playbackRate = Number(speed.value) || 1;
+
+      const runRound = async () => {
+        if (!shadow.active || shadow.active.session !== session) return;
+        await seekTo(sentence.start);
+        if (!shadow.active || shadow.active.session !== session) return;
+        if (audio.currentTime >= sentence.end - 0.05) {
+          cancelShadow("跳转没成功，请再点一次", true);
+          return;
+        }
+        try { await audio.play(); } catch (_) {
+          cancelShadow("浏览器拦下了播放，请再点一次", true);
+          return;
+        }
+        if (!shadow.active || shadow.active.session !== session) return;
+        setCardPlaying(index, true);
+        setCardStatus(index, "正在播放 " + (shadow.active.done + 1) + " / " + total + " 轮");
+
+        shadow.stop = watchUntil(sentence.end, reason => {
+          shadow.stop = null;
+          if (!shadow.active || shadow.active.session !== session) return;
+          if (reason === "cancelled") return;
+          audio.pause();
+          setCardPlaying(index, false);
+          shadow.active.done += 1;
+          if (shadow.active.done >= total) {
+            setCardStatus(index, "已完成 " + total + " 轮，换一句或再来一遍");
+            cancelShadow("", false);
+            return;
+          }
+          setCardStatus(index, "第 " + shadow.active.done + " 轮结束，跟读一遍，马上再放");
+          // 这 800ms 是留给你开口跟读的，不是延迟
+          shadow.timer = setTimeout(() => { shadow.timer = null; runRound(); }, 800);
+        });
+      };
+      await runRound();
+    };
+
+    once.addEventListener("click", () => playSentence(1));
+    loop.addEventListener("click", () => playSentence(Number(loopCount.value)));
+    stop.addEventListener("click", () => cancelShadow("已停止", true));
+    toggle.addEventListener("click", async () => {
+      if (shadow.active && shadow.active.index === index && !audio.paused) {
+        audio.pause();
+        setCardPlaying(index, false);
+        return;
+      }
+      if (shadow.active && shadow.active.index === index && audio.paused) {
+        try { await audio.play(); setCardPlaying(index, true); } catch (_) {}
+        return;
+      }
+      playSentence(Number(loopCount.value));
+    });
+    hide.addEventListener("click", () => {
+      const hidden = text.classList.toggle("is-hidden");
+      hide.textContent = hidden ? "显示字幕" : "隐藏字幕";
+      hide.classList.toggle("is-on", hidden);
+    });
+    showTranslation.addEventListener("click", () => {
+      translation.hidden = !translation.hidden;
+      showTranslation.textContent = translation.hidden ? "看翻译" : "收起翻译";
+      showTranslation.classList.toggle("is-on", !translation.hidden);
+    });
+    speed.addEventListener("change", () => {
+      if (shadow.active && shadow.active.index === index) audio.playbackRate = Number(speed.value);
+      setCardStatus(index, speed.value + "× · 循环 " + loopCount.value + " 次");
+    });
+    loopCount.addEventListener("change", () => {
+      setCardStatus(index, speed.value + "× · 循环 " + loopCount.value + " 次");
+    });
+
+    /* --- 录音 --- */
+    const reference = cardRefs[index];
+    recStart.addEventListener("click", async () => {
+      if (!micSupported()) {
+        recStatus.textContent = "这个浏览器不支持页内录音，跟读和听力不受影响。";
+        return;
+      }
+      try {
+        // 第一句会弹一次授权框，之后所有句子直接复用，不再打断
+        recStatus.textContent = micLive() ? "准备录音…" : "正在请求麦克风，允许这一次就好…";
+        const stream = await ensureMicStream();
+        const mime = recorderMime();
+        const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        const chunks = [];
+        recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
+        recorder.addEventListener("stop", () => {
+          // 这里不停 track：麦克风流留给下一句复用，停了就得重新授权
+          const blob = new Blob(chunks, { type: mime || "audio/webm" });
+          if (!blob.size) { recStatus.textContent = "没有录到声音，再试一次。"; return; }
+          if (reference.url) URL.revokeObjectURL(reference.url);
+          reference.url = URL.createObjectURL(blob);
+          recPlayer.src = reference.url;
+          recPlayer.hidden = false;
+          recPlay.disabled = false;
+          recStatus.textContent = "录好了 · " + (blob.size / 1024).toFixed(0) + " KB，点回听对比原句。";
+        });
+        recorder.start();
+        reference.recorder = recorder;
+        recStart.disabled = true;
+        recStop.disabled = false;
+        recStatus.textContent = "正在录音…";
+      } catch (error) {
+        recStatus.textContent = error.name === "NotAllowedError"
+          ? "麦克风被拒绝了。点地址栏左边的图标改成「允许」，刷新页面再试；听力和跟读不受影响。"
+          : "拿不到麦克风（" + error.name + "），听力和跟读不受影响。";
+        recStart.disabled = false;
+        recStop.disabled = true;
+      }
+    });
+    recStop.addEventListener("click", () => {
+      if (reference.recorder && reference.recorder.state !== "inactive") reference.recorder.stop();
+      recStart.disabled = false;
+      recStop.disabled = true;
+    });
+    recPlay.addEventListener("click", () => {
+      if (!audio.paused) { audio.pause(); cancelShadow("", false); }
+      recPlayer.play().catch(() => { recStatus.textContent = "回听失败，重新录一次。"; });
+    });
+  };
+
+  /* ---------- 词义气泡 ---------- */
+  const pop = document.getElementById("pop");
+  const openPop = (word, meaning) => {
+    document.getElementById("pop-word").textContent = word;
+    document.getElementById("pop-meaning").textContent = meaning || "（没有释义）";
+    pop.hidden = false;
+  };
+  document.getElementById("pop-close").addEventListener("click", () => { pop.hidden = true; });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") pop.hidden = true;
+  });
+
+  /* ---------- 键盘 ---------- */
+  document.addEventListener("keydown", event => {
+    const tag = (event.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "select" || tag === "textarea") return;
+    const map = { j: -10, l: 10, ArrowLeft: -5, ArrowRight: 5 };
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    if (key === " ") { event.preventDefault(); togglePlay(); return; }
+    if (map[key] === undefined) return;
+    event.preventDefault();
+    cancelShadow("已切到整集播放", false);
+    const end = Number.isFinite(audio.duration) ? audio.duration : Number.MAX_SAFE_INTEGER;
+    audio.currentTime = clamp(audio.currentTime + map[key], 0, end);
+    renderListenStatus((map[key] > 0 ? "前进 " : "后退 ") + Math.abs(map[key]) + " 秒");
+  });
+
+  /* ---------- 首屏装配 ---------- */
+  const hour = new Date().getHours();
+  document.getElementById("greeting").textContent =
+    hour < 11 ? "早上好。" : hour < 18 ? "下午好。" : "晚上好。";
+
+  const episode = lesson.episode || {};
+  document.getElementById("episode-title").textContent = episode.title || "本期课程";
+  document.title = (episode.title || "本期课程") + " · Clear English";
+  document.getElementById("episode-sub").textContent =
+    "BBC 6 Minute English" + (episode.duration_seconds ? " · 约 " +
+      Math.round(episode.duration_seconds / 60) + " 分钟" : "");
+  document.getElementById("foot-id").textContent = episode.id || "—";
+
+  const listenOnly = lesson.mode === "listen_only" || !sentences.length;
+  document.getElementById("foot-mode").textContent = listenOnly ? "只可收听" : sentences.length + " 句训练";
+  document.getElementById("listen-tag").textContent = listenOnly ? "只可收听" : "整集精听";
+  document.getElementById("nav-count").textContent = listenOnly ? "0" : String(sentences.length);
+  document.getElementById("shadow-why").textContent =
+    listenOnly ? "本集未生成" : "共 " + sentences.length + " 句，每次只练一句";
+
+  if (listenOnly) {
+    document.getElementById("shadow-error").hidden = false;
+  } else {
+    sentences.forEach(renderCard);
+  }
+
+  // Chrome / Edge 把双击打开的 file:// 也算安全上下文，录音是通的（已实测）。
+  // 只有真正拿不到麦克风接口的浏览器才提示，别让用户以为是坏了。
+  if (!window.isSecureContext || !micSupported()) {
+    document.getElementById("offline-note").hidden = false;
+  }
+
+  // 关于本课
+  const about = document.getElementById("about-body");
+  const rows = [
+    ["期次", episode.id || "—"],
+    ["官方页面", episode.bbc_page_url || ""],
+    ["官方 Transcript", episode.transcript_pdf_url || ""],
+    ["对齐算法", (lesson.shadow && lesson.shadow.algorithm_version) || "—"],
+    ["对齐模型", (lesson.shadow && lesson.shadow.model_name) || "—"],
+    ["生成时间", lesson.generated_at || "—"]
+  ];
+  rows.forEach(([label, value]) => {
+    const line = document.createElement("p");
+    line.style.margin = "0 0 8px";
+    const key = document.createElement("span");
+    key.style.cssText = "display:inline-block;min-width:118px;color:var(--ink-faint);font-size:13px";
+    key.textContent = label;
+    line.append(key);
+    if (/^https?:/.test(value)) {
+      const link = document.createElement("a");
+      link.href = value;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = value.length > 62 ? value.slice(0, 62) + "…" : value;
+      line.append(link);
+    } else {
+      line.append(document.createTextNode(value || "—"));
+    }
+    about.append(line);
+  });
+
+  // 页面被切走时停下单句循环，避免音频在后台跑飞
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && shadow.active) {
+      cancelShadow("页面切走了，训练已暂停", true);
+    }
+  });
+
+  // 导航高亮
+  const links = [...document.querySelectorAll(".nav a")];
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      links.forEach(link => link.classList.toggle("is-active", link.getAttribute("href") === "#" + entry.target.id));
+    });
+  }, { rootMargin: "-18% 0px -70% 0px" });
+  document.querySelectorAll("section").forEach(node => observer.observe(node));
+
+  renderListenStatus("");
+})();
+</script>
+</body>
+</html>

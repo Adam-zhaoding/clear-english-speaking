@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="probe-version" content="1">
+<title>运行时体检 · Work Buddy English Speaking</title>
+<style>
+  :root {
+    --paper: #f4f1e9;
+    --paper-warm: #efebe0;
+    --card: #ffffff;
+    --ink: #23241f;
+    --ink-soft: #6f6c60;
+    --ink-faint: #9b978a;
+    --moss: #1e4632;
+    --moss-deep: #163424;
+    --moss-mid: #2f6045;
+    --sage: #dbe7db;
+    --sage-soft: #eaf0e8;
+    --rule: #e3ded1;
+    --amber: #a5701a;
+    --amber-soft: #f6ecd8;
+    --brick: #9c3a28;
+    --brick-soft: #f7e4df;
+    --font-sans: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
+                 "Noto Sans SC", "Microsoft YaHei", -apple-system, sans-serif;
+    --font-num: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --font-mono: "Cascadia Mono", "JetBrains Mono", "SF Mono", Consolas, monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    display: flex; margin: 0; color: var(--ink); background: var(--paper);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    opacity: .5; background:
+      radial-gradient(880px 420px at 18% -8%, rgba(30, 70, 50, .07), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- 左侧导航 ---------- */
+  .rail {
+    position: sticky; top: 0; z-index: 2; display: flex; flex-direction: column;
+    flex: 0 0 246px; height: 100vh; padding: 26px 18px 22px;
+    border-right: 1px solid var(--rule); background: var(--paper-warm);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; margin-bottom: 34px; }
+  .brand-mark {
+    display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+    color: #f2f6f0; background: var(--moss);
+    font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  }
+  .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .nav { display: grid; gap: 3px; }
+  .nav a {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border-radius: 11px; color: var(--ink-soft); font-weight: 600;
+    text-decoration: none; transition: background .18s, color .18s;
+  }
+  .nav a:hover { color: var(--ink); background: rgba(30, 70, 50, .06); }
+  .nav a.is-active { color: var(--moss); background: var(--sage); }
+  .nav .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ink-faint); transition: background .25s;
+  }
+  .nav a.is-active .dot { background: var(--moss); }
+  .nav .count {
+    margin-left: auto; padding: 1px 8px; border-radius: 20px;
+    background: rgba(30, 70, 50, .1); color: var(--moss);
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .rail-foot {
+    margin-top: auto; padding: 14px 12px 0; border-top: 1px solid var(--rule);
+    color: var(--ink-faint); font-family: var(--font-mono); font-size: 11px; line-height: 1.75;
+  }
+
+  /* ---------- 主区 ---------- */
+  .sheet { position: relative; z-index: 1; flex: 1; min-width: 0; overflow-y: auto; height: 100vh; }
+  .sheet-inner { max-width: 980px; padding: 46px 56px 90px; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    color: var(--moss-mid); font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  }
+  h1 { margin: 0 0 14px; font-size: 46px; font-weight: 800; letter-spacing: -.035em; line-height: 1.08; }
+  .lede { max-width: 66ch; margin: 0 0 34px; color: var(--ink-soft); font-size: 16px; }
+
+  /* 结论横幅 */
+  .verdict {
+    padding: 30px 32px; margin-bottom: 40px;
+    border: 1px solid rgba(30, 70, 50, .14); border-radius: 22px; background: var(--sage-soft);
+  }
+  .verdict-top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; }
+  .verdict-copy { flex: 1 1 320px; min-width: 0; }
+  .verdict-tag {
+    display: inline-block; padding: 3px 12px; margin-bottom: 12px; border-radius: 20px;
+    background: rgba(30, 70, 50, .12); color: var(--moss);
+    font-size: 12px; font-weight: 700; letter-spacing: .05em;
+  }
+  .verdict h2 { margin: 0 0 8px; font-size: 27px; font-weight: 800; letter-spacing: -.02em; }
+  .verdict p { margin: 0; max-width: 54ch; color: var(--ink-soft); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  button, .ghost-link {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+    padding: 0 20px; border: 1px solid rgba(30, 70, 50, .2); border-radius: 12px;
+    color: var(--moss); background: transparent; cursor: pointer;
+    font: inherit; font-weight: 700; text-decoration: none;
+    transition: background .18s, border-color .18s, transform .12s;
+  }
+  button:hover:not(:disabled), .ghost-link:hover { background: rgba(30, 70, 50, .07); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.solid { border-color: var(--moss); color: #f3f7f1; background: var(--moss); }
+  button.solid:hover:not(:disabled) { background: var(--moss-mid); }
+  button.mini {
+    min-height: 32px; padding: 0 13px; border-radius: 9px;
+    font-size: 13px; font-weight: 700;
+  }
+
+  /* 三个关键读数 */
+  .gauges {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: 1px;
+    margin-top: 28px; overflow: hidden;
+    border: 1px solid rgba(30, 70, 50, .13); border-radius: 16px; background: rgba(30, 70, 50, .13);
+  }
+  .gauge { padding: 18px 20px; background: #f7f9f5; }
+  .gauge-label {
+    color: var(--ink-soft); font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .gauge-value {
+    margin-top: 7px; color: var(--moss); font-family: var(--font-num);
+    font-size: 38px; font-weight: 600; line-height: 1; letter-spacing: -.02em;
+  }
+  .gauge-value small { font-size: 15px; font-weight: 400; letter-spacing: 0; }
+  .gauge-note { margin-top: 6px; color: var(--ink-faint); font-size: 12.5px; }
+  .gauge.is-warn .gauge-value { color: var(--amber); }
+  .gauge.is-fail .gauge-value { color: var(--brick); }
+  .gauge.is-idle .gauge-value { color: var(--ink-faint); }
+
+  /* 分组 */
+  section { margin-bottom: 42px; scroll-margin-top: 24px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    padding-bottom: 12px; margin-bottom: 2px; border-bottom: 1px solid var(--rule);
+  }
+  .section-head h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.015em; }
+  .section-head .idx {
+    color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em;
+  }
+  .section-head .why { margin-left: auto; color: var(--ink-faint); font-size: 13px; }
+
+  .rows { border: 1px solid var(--rule); border-radius: 16px; background: var(--card); overflow: hidden; }
+  .row {
+    display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 14px;
+    align-items: start; padding: 15px 20px; border-top: 1px solid var(--rule);
+    animation: rise .42s cubic-bezier(.2, .7, .3, 1) backwards;
+  }
+  .row:first-child { border-top: 0; }
+  @keyframes rise { from { opacity: 0; transform: translateY(7px); } }
+  .status {
+    width: 10px; height: 10px; margin-top: 8px; border-radius: 50%;
+    background: #d6d2c6; transition: background .3s, box-shadow .3s;
+  }
+  .row[data-state="running"] .status { background: var(--amber); animation: pulse 1s ease-in-out infinite; }
+  .row[data-state="pass"] .status { background: var(--moss); box-shadow: 0 0 0 4px rgba(30, 70, 50, .12); animation: pop .34s ease-out; }
+  .row[data-state="warn"] .status { background: var(--amber); box-shadow: 0 0 0 4px rgba(165, 112, 26, .14); }
+  .row[data-state="fail"] .status { background: var(--brick); box-shadow: 0 0 0 4px rgba(156, 58, 40, .13); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @keyframes pop { from { transform: scale(.4); } 60% { transform: scale(1.25); } }
+  .row-name { font-weight: 700; }
+  .row-hint { margin-top: 3px; color: var(--ink-soft); font-size: 13.5px; }
+  .row-value {
+    max-width: 340px; color: var(--moss); font-family: var(--font-mono);
+    font-size: 12.5px; line-height: 1.65; text-align: right; word-break: break-word;
+  }
+  .row[data-state="warn"] .row-value { color: var(--amber); }
+  .row[data-state="fail"] .row-value { color: var(--brick); }
+  .row[data-state="idle"] .row-value, .row[data-state="skip"] .row-value { color: var(--ink-faint); }
+
+  .callout {
+    display: flex; gap: 12px; padding: 15px 18px; margin-top: 14px;
+    border: 1px solid rgba(165, 112, 26, .28); border-radius: 14px;
+    background: var(--amber-soft); color: #6b4a12; font-size: 13.5px;
+  }
+  .callout strong { display: block; margin-bottom: 3px; color: #4f360b; }
+
+  /* 录音回听 */
+  .playback { display: none; padding: 16px 20px; border-top: 1px solid var(--rule); background: #fbfaf6; }
+  .playback.is-on { display: block; }
+  .playback audio { width: 100%; margin-top: 10px; }
+  .playback-title { color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+
+  /* 导出 */
+  .export-box {
+    padding: 20px; border: 1px solid var(--rule); border-radius: 16px; background: var(--card);
+  }
+  .field { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .field label { color: var(--ink-soft); font-size: 13.5px; font-weight: 700; }
+  select, input[type="text"] {
+    min-height: 42px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 11px;
+    background: #fbfaf6; color: var(--ink); font: inherit;
+  }
+  textarea {
+    width: 100%; height: 240px; padding: 15px; border: 1px solid var(--rule); border-radius: 12px;
+    background: #fbfaf6; color: var(--ink-soft);
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: vertical;
+  }
+  .toast {
+    position: fixed; right: 26px; bottom: 26px; z-index: 20;
+    padding: 13px 20px; border-radius: 12px; background: var(--moss); color: #f2f6f0;
+    font-weight: 700; box-shadow: 0 14px 40px rgba(22, 52, 36, .28);
+    opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s;
+  }
+  .toast.is-on { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    .rail { position: static; flex: none; height: auto; }
+    .nav { grid-auto-flow: column; overflow-x: auto; }
+    .nav .count, .rail-foot { display: none; }
+    .sheet { height: auto; }
+    .sheet-inner { padding: 30px 22px 70px; }
+    h1 { font-size: 34px; }
+    .row { grid-template-columns: 22px minmax(0, 1fr); }
+    .row-value { max-width: none; text-align: left; grid-column: 2; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="rail">
+  <div class="brand">
+    <div class="brand-mark">CE</div>
+    <div class="brand-name">Clear English</div>
+  </div>
+  <nav class="nav" id="nav">
+    <a href="#env" class="is-active"><span class="dot"></span>环境<span class="count" data-count="env">—</span></a>
+    <a href="#audio"><span class="dot"></span>音频运行时<span class="count" data-count="audio">—</span></a>
+    <a href="#mic"><span class="dot"></span>麦克风<span class="count" data-count="mic">—</span></a>
+    <a href="#artifact"><span class="dot"></span>产物能力<span class="count" data-count="artifact">—</span></a>
+    <a href="#export"><span class="dot"></span>导出结果</a>
+  </nav>
+  <div class="rail-foot">
+    probe v1<br>
+    <span id="foot-proto">—</span><br>
+    <span id="foot-time">—</span>
+  </div>
+</aside>
+
+<main class="sheet">
+<div class="sheet-inner">
+
+  <div class="eyebrow">✦ M0 探针 · 一次跑完三个未知</div>
+  <h1>这台机器<br>能跑影子跟读吗？</h1>
+  <p class="lede">
+    影子跟读要的不是"能播音频"，而是<strong>能不能在句尾 100 毫秒内停住</strong>、能不能变速、能不能录到你的声音。
+    这一页把这些逐条测出来，给出真实数字，而不是"应该可以"。
+  </p>
+
+  <div class="verdict" id="verdict">
+    <div class="verdict-top">
+      <div class="verdict-copy">
+        <span class="verdict-tag" id="verdict-tag">尚未体检</span>
+        <h2 id="verdict-title">先点一下「开始体检」</h2>
+        <p id="verdict-text">
+          音频类检测需要一次点击才能获得浏览器的播放许可，这是浏览器的自动播放策略，不是故障。
+          麦克风单独一个按钮，因为它会弹权限窗。
+        </p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="solid" id="btn-run">▶ 开始体检</button>
+      <button id="btn-mic">🎙 单测麦克风与录音</button>
+      <button id="btn-reset">重置</button>
+    </div>
+    <div class="gauges">
+      <div class="gauge is-idle" id="gauge-seek">
+        <div class="gauge-label">seek 误差</div>
+        <div class="gauge-value">—<small> ms</small></div>
+        <div class="gauge-note">跳到句首准不准</div>
+      </div>
+      <div class="gauge is-idle" id="gauge-tick">
+        <div class="gauge-label">timeupdate 间隔</div>
+        <div class="gauge-value">—<small> ms</small></div>
+        <div class="gauge-note">句尾能多快察觉</div>
+      </div>
+      <div class="gauge is-idle" id="gauge-loop">
+        <div class="gauge-label">循环超出</div>
+        <div class="gauge-value">—<small> ms</small></div>
+        <div class="gauge-note">实际停点比句尾晚多少</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="env">
+    <div class="section-head">
+      <span class="idx">01</span><h3>环境与安全上下文</h3>
+      <span class="why">决定麦克风是否被浏览器直接禁用</span>
+    </div>
+    <div class="rows" id="rows-env"></div>
+    <div class="callout" id="insecure-note" style="display:none">
+      <span>⚠</span>
+      <div>
+        <strong>当前不是安全上下文</strong>
+        用 <code>file://</code> 双击打开时，Chrome / Edge 会让 <code>navigator.mediaDevices</code> 直接变成
+        undefined，录音必然不可用。改用 <code>http://localhost</code> 打开同一个文件即可解锁——
+        这正是本次探针要验证的第一个未知。
+      </div>
+    </div>
+  </section>
+
+  <section id="audio">
+    <div class="section-head">
+      <span class="idx">02</span><h3>音频运行时</h3>
+      <span class="why">影子跟读的命脉</span>
+    </div>
+    <div class="rows" id="rows-audio"></div>
+  </section>
+
+  <section id="mic">
+    <div class="section-head">
+      <span class="idx">03</span><h3>麦克风与录音</h3>
+      <span class="why">跟读能否留下自己的声音</span>
+    </div>
+    <div class="rows" id="rows-mic"></div>
+    <div class="playback" id="playback">
+      <div class="playback-title">刚才录到的声音（只在本机内存里，关掉页面即消失）</div>
+      <audio id="recorded" controls></audio>
+    </div>
+  </section>
+
+  <section id="artifact">
+    <div class="section-head">
+      <span class="idx">04</span><h3>产物能力</h3>
+      <span class="why">录音能否导出、课程能否落盘</span>
+    </div>
+    <div class="rows" id="rows-artifact"></div>
+  </section>
+
+  <section id="export">
+    <div class="section-head">
+      <span class="idx">05</span><h3>导出结果</h3>
+      <span class="why">三个环境各跑一次，然后对比</span>
+    </div>
+    <div class="export-box">
+      <div class="field">
+        <label for="env-tag">这次是在哪跑的</label>
+        <select id="env-tag">
+          <option value="file-double-click">A · file:// 双击打开</option>
+          <option value="localhost-server">B · http://localhost 本地服务</option>
+          <option value="workbuddy-preview">C · WorkBuddy 产物预览</option>
+          <option value="other">其他</option>
+        </select>
+        <button class="mini" id="btn-copy">复制 JSON</button>
+        <button class="mini" id="btn-download">下载 JSON</button>
+      </div>
+      <textarea id="output" readonly spellcheck="false">跑完体检后，结果会出现在这里。</textarea>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<audio id="probe-audio" preload="auto" src="data:audio/wav;base64,__TONE_B64__"></audio>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const audio = document.getElementById("probe-audio");
+  const toastEl = document.getElementById("toast");
+  const results = new Map();
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const once = (target, type, timeout = 4000) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { target.removeEventListener(type, handler); reject(new Error("timeout:" + type)); }, timeout);
+    const handler = event => { clearTimeout(timer); target.removeEventListener(type, handler); resolve(event); };
+    target.addEventListener(type, handler);
+  });
+  const round = (value, digits = 1) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
+
+  let toastTimer = null;
+  const toast = message => {
+    toastEl.textContent = message;
+    toastEl.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("is-on"), 2200);
+  };
+
+  /* ---------- 检测项定义 ---------- */
+  const CHECKS = [
+    // 01 环境
+    { id: "protocol", group: "env", name: "打开方式", hint: "file:// 与 http:// 的差别决定录音是否可用", auto: true },
+    { id: "secure", group: "env", name: "安全上下文", hint: "isSecureContext，麦克风的硬门槛", auto: true },
+    { id: "runtime", group: "env", name: "运行容器", hint: "普通浏览器 / Electron 或 WebView 内嵌预览", auto: true },
+    { id: "screen", group: "env", name: "屏幕与缩放", hint: "布局排查用", auto: true },
+    { id: "visibility", group: "env", name: "页面可见性", hint: "页面不可见时 requestAnimationFrame 会被浏览器暂停", auto: true },
+
+    // 02 音频
+    { id: "dataUri", group: "audio", name: "内嵌音频解码", hint: "data: URI 音频能否读到时长——单文件方案的地基", auto: true },
+    { id: "webAudio", group: "audio", name: "Web Audio API", hint: "timeupdate 精度不够时的高精度备选方案", auto: true },
+    { id: "remote", group: "audio", name: "远程音频兜底", hint: "内嵌失败时能否回落到 BBC 官方 MP3（需联网）", auto: true },
+    { id: "play", group: "audio", name: "播放许可", hint: "自动播放策略下能否 play()", auto: false },
+    { id: "rate", group: "audio", name: "变速 8 档", hint: "0.5× 到 2.0× 逐档设置后读回校验", auto: false },
+    { id: "seek", group: "audio", name: "seek 精度", hint: "跳到指定秒后的实际落点误差（4 个采样点取最大）", auto: false },
+    { id: "tick", group: "audio", name: "timeupdate 间隔", hint: "浏览器多久汇报一次播放位置，决定句尾判定延迟", auto: false },
+    { id: "loop", group: "audio", name: "AB 循环 · timeupdate 方案", hint: "真跑 3 轮 2.0s→3.0s。参考实现 v9 用的就是这个", auto: false },
+    { id: "loopRaf", group: "audio", name: "AB 循环 · rAF 轮询方案", hint: "同样 3 轮，改用 requestAnimationFrame 逐帧判定句尾", auto: false },
+    { id: "loopHybrid", group: "audio", name: "AB 循环 · 双保险方案", hint: "rAF 主判定 + timeupdate 兜底 + 硬超时，记录谁先命中", auto: false },
+
+    // 03 麦克风
+    { id: "mediaDevices", group: "mic", name: "mediaDevices 接口", hint: "不安全上下文下会直接消失", auto: true },
+    { id: "recorderTypes", group: "mic", name: "MediaRecorder 格式", hint: "能录成什么容器格式", auto: true },
+    { id: "permission", group: "mic", name: "麦克风授权", hint: "点击后弹权限窗，拒绝也是有效结论", auto: false },
+    { id: "roundTrip", group: "mic", name: "录音回放全链路", hint: "录 3 秒 → 生成 blob → 能否回听", auto: false },
+    { id: "devices", group: "mic", name: "输入设备", hint: "授权后才能读到设备名", auto: false },
+
+    // 04 产物
+    { id: "blobUrl", group: "artifact", name: "Blob URL", hint: "录音回听与下载都靠它", auto: true },
+    { id: "download", group: "artifact", name: "下载触发", hint: "a[download] 是否被容器拦截（需人工确认是否真的落盘）", auto: true },
+    { id: "storage", group: "artifact", name: "localStorage", hint: "记住上次的速度、循环次数等偏好", auto: true },
+    { id: "idb", group: "artifact", name: "IndexedDB", hint: "留存录音的可选方案", auto: true },
+    { id: "fetchLocal", group: "artifact", name: "读取同目录文件", hint: "决定音频能否不内嵌、改用外部文件", auto: true }
+  ];
+
+  /* ---------- 渲染 ---------- */
+  const rowNodes = new Map();
+  const groupTitles = { env: "rows-env", audio: "rows-audio", mic: "rows-mic", artifact: "rows-artifact" };
+
+  CHECKS.forEach((check, index) => {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.dataset.state = "idle";
+    row.style.animationDelay = (index % 6) * 45 + "ms";
+
+    const status = document.createElement("div");
+    status.className = "status";
+
+    const body = document.createElement("div");
+    const name = document.createElement("div");
+    name.className = "row-name";
+    name.textContent = check.name;
+    const hint = document.createElement("div");
+    hint.className = "row-hint";
+    hint.textContent = check.hint;
+    body.append(name, hint);
+
+    const value = document.createElement("div");
+    value.className = "row-value";
+    value.textContent = check.auto ? "待检测" : "需点击运行";
+
+    row.append(status, body, value);
+    document.getElementById(groupTitles[check.group]).append(row);
+    rowNodes.set(check.id, { row, value });
+    results.set(check.id, { id: check.id, group: check.group, name: check.name, state: "idle", value: null, detail: null });
+  });
+
+  const setResult = (id, state, value, detail) => {
+    const node = rowNodes.get(id);
+    if (node) {
+      node.row.dataset.state = state;
+      node.value.textContent = value == null ? "—" : String(value);
+    }
+    const record = results.get(id);
+    record.state = state;
+    record.value = value == null ? null : String(value);
+    if (detail !== undefined) record.detail = detail;
+    updateCounts();
+  };
+
+  const updateCounts = () => {
+    document.querySelectorAll("[data-count]").forEach(node => {
+      const group = node.dataset.count;
+      const items = [...results.values()].filter(item => item.group === group);
+      const done = items.filter(item => item.state !== "idle" && item.state !== "running").length;
+      node.textContent = done + "/" + items.length;
+    });
+  };
+
+  const setGauge = (elementId, value, unit, state, note) => {
+    const gauge = document.getElementById(elementId);
+    gauge.className = "gauge" + (state ? " is-" + state : "");
+    gauge.querySelector(".gauge-value").innerHTML =
+      (value == null ? "—" : value) + "<small> " + unit + "</small>";
+    if (note) gauge.querySelector(".gauge-note").textContent = note;
+  };
+
+  /* ---------- 01 环境（页面加载即跑） ---------- */
+  const detectRuntime = () => {
+    const ua = navigator.userAgent;
+    const flags = [];
+    if (/Electron/i.test(ua)) flags.push("Electron");
+    if (/\bwv\b/.test(ua)) flags.push("Android WebView");
+    if (/Edg\//.test(ua)) flags.push("Edge");
+    else if (/Chrome\//.test(ua)) flags.push("Chromium");
+    if (/Firefox\//.test(ua)) flags.push("Firefox");
+    if (window.top !== window.self) flags.push("iframe 内");
+    return flags.length ? flags.join(" · ") : "未知容器";
+  };
+
+  const runEnvironment = () => {
+    const protocol = location.protocol;
+    setResult("protocol", protocol === "file:" ? "warn" : "pass", protocol + "//", { href: location.href });
+
+    const secure = window.isSecureContext === true;
+    setResult("secure", secure ? "pass" : "fail", secure ? "true" : "false");
+    document.getElementById("insecure-note").style.display = secure ? "none" : "flex";
+
+    setResult("runtime", "pass", detectRuntime(), { userAgent: navigator.userAgent });
+    setResult("screen", "pass",
+      window.innerWidth + "×" + window.innerHeight + " @" + (window.devicePixelRatio || 1) + "x");
+
+    const visible = document.visibilityState === "visible";
+    setResult("visibility", visible ? "pass" : "warn",
+      document.visibilityState + (visible ? "" : " · rAF 已被暂停"),
+      { visibilityState: document.visibilityState, hasFocus: document.hasFocus() });
+
+    document.getElementById("foot-proto").textContent = protocol + " · " + (secure ? "secure" : "insecure");
+    document.getElementById("foot-time").textContent = new Date().toLocaleString("zh-CN");
+  };
+
+  /* ---------- 02 音频 · 自动部分 ---------- */
+  const runAudioAuto = async () => {
+    // 内嵌 data URI
+    setResult("dataUri", "running", "读取中…");
+    try {
+      if (!Number.isFinite(audio.duration) || audio.duration === 0) {
+        await once(audio, "loadedmetadata", 6000);
+      }
+      const duration = audio.duration;
+      const ok = Number.isFinite(duration) && Math.abs(duration - 8) < 0.6;
+      setResult("dataUri", ok ? "pass" : "warn", "时长 " + round(duration, 2) + "s / 期望 8s",
+        { duration, expected: 8 });
+    } catch (error) {
+      setResult("dataUri", "fail", "无法解码：" + error.message);
+    }
+
+    // Web Audio
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) throw new Error("AudioContext 不存在");
+      const ctx = new Ctx();
+      setResult("webAudio", "pass", "可用 · " + ctx.sampleRate + "Hz · " + ctx.state);
+      ctx.close();
+    } catch (error) {
+      setResult("webAudio", "fail", error.message);
+    }
+
+    // 远程兜底
+    setResult("remote", "running", "连接 BBC…");
+    try {
+      const probe = new Audio();
+      probe.preload = "metadata";
+      probe.src = "https://downloads.bbc.co.uk/learningenglish/features/6min/" +
+        "260813_6_minute_english_who_does_the_housework_download.mp3";
+      await once(probe, "loadedmetadata", 9000);
+      setResult("remote", "pass", "可达 · 时长 " + round(probe.duration, 1) + "s");
+      probe.src = "";
+    } catch (error) {
+      setResult("remote", "warn", "不可达（离线或被拦）", { message: error.message });
+    }
+  };
+
+  /* ---------- 02 音频 · 需要手势的部分 ---------- */
+  const runAudioLive = async () => {
+    // 播放许可
+    setResult("play", "running", "请求播放…");
+    try {
+      audio.currentTime = 0;
+      audio.playbackRate = 1;
+      await audio.play();
+      audio.pause();
+      setResult("play", "pass", "已获得播放许可");
+    } catch (error) {
+      setResult("play", "fail", "被拒绝：" + error.name);
+      return;
+    }
+
+    // 变速
+    setResult("rate", "running", "逐档测试…");
+    const rates = [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
+    const badRates = [];
+    for (const rate of rates) {
+      audio.playbackRate = rate;
+      await sleep(35);
+      if (Math.abs(audio.playbackRate - rate) > 0.001) badRates.push(rate);
+    }
+    audio.playbackRate = 1;
+    setResult("rate", badRates.length ? "warn" : "pass",
+      badRates.length ? "失效：" + badRates.join(", ") : "8 档全部生效",
+      { tested: rates, failed: badRates });
+
+    // seek 精度
+    setResult("seek", "running", "采样中…");
+    const targets = [1, 2.5, 4, 6.5];
+    const errors = [];
+    for (const target of targets) {
+      audio.currentTime = target;
+      try { await once(audio, "seeked", 3000); } catch (_) { /* 部分容器不派发 seeked */ }
+      errors.push(Math.abs(audio.currentTime - target) * 1000);
+    }
+    const seekMax = Math.max(...errors);
+    const seekState = seekMax < 50 ? "pass" : seekMax < 150 ? "warn" : "fail";
+    setResult("seek", seekState, "最大 " + round(seekMax) + "ms（" + targets.length + " 点）",
+      { targets, errorsMs: errors.map(v => round(v)) });
+    setGauge("gauge-seek", round(seekMax), "ms", seekState === "pass" ? null : seekState,
+      seekState === "pass" ? "跳到句首准不准" : "误差偏大，句首可能被切");
+
+    // timeupdate 间隔
+    setResult("tick", "running", "监听 2 秒…");
+    audio.currentTime = 0;
+    const stamps = [];
+    const tickHandler = () => stamps.push(performance.now());
+    audio.addEventListener("timeupdate", tickHandler);
+    await audio.play();
+    await sleep(2000);
+    audio.pause();
+    audio.removeEventListener("timeupdate", tickHandler);
+    const gaps = stamps.slice(1).map((value, index) => value - stamps[index]);
+    const tickAvg = gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : NaN;
+    const tickMax = gaps.length ? Math.max(...gaps) : NaN;
+    const tickState = !gaps.length ? "fail" : tickMax < 300 ? "pass" : tickMax < 500 ? "warn" : "fail";
+    setResult("tick", tickState,
+      gaps.length ? "平均 " + round(tickAvg) + "ms / 最大 " + round(tickMax) + "ms" : "没有收到 timeupdate",
+      { samples: gaps.length, avgMs: round(tickAvg), maxMs: round(tickMax) });
+    setGauge("gauge-tick", round(tickAvg), "ms", tickState === "pass" ? null : tickState,
+      tickState === "pass" ? "句尾判定延迟可接受" : "句尾会明显拖尾");
+
+    // AB 循环实测：两种句尾判定方案跑同样的 3 轮，直接比精度
+    const START = 2, END = 3, ROUNDS = 3;
+
+    // mode: "timeupdate" | "raf" | "hybrid"
+    // 每轮都有硬超时保护，否则 rAF 在页面不可见时会挂死，音频一路播到结尾。
+    const runAbLoop = async mode => {
+      const overshoots = [];
+      const restGaps = [];
+      const deciders = [];
+      for (let index = 0; index < ROUNDS; index += 1) {
+        audio.currentTime = START;
+        try { await once(audio, "seeked", 3000); } catch (_) {}
+        await audio.play();
+
+        const outcome = await new Promise(resolve => {
+          let settled = false;
+          let frameId = null;
+          let guardId = null;
+
+          const finish = decidedBy => {
+            if (settled) return;
+            settled = true;
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            if (guardId !== null) clearTimeout(guardId);
+            audio.removeEventListener("timeupdate", watcher);
+            audio.pause();
+            resolve({ at: audio.currentTime, decidedBy });
+          };
+          function watcher() { if (audio.currentTime >= END) finish("timeupdate"); }
+          const frame = () => {
+            if (settled) return;
+            if (audio.currentTime >= END) { finish("raf"); return; }
+            frameId = requestAnimationFrame(frame);
+          };
+
+          if (mode === "timeupdate" || mode === "hybrid") audio.addEventListener("timeupdate", watcher);
+          if (mode === "raf" || mode === "hybrid") frameId = requestAnimationFrame(frame);
+          // 片段时长 + 2.5s 余量；触发即说明该方案在此环境下失灵
+          guardId = setTimeout(() => finish("timeout"), (END - START) * 1000 + 2500);
+        });
+
+        overshoots.push((outcome.at - END) * 1000);
+        deciders.push(outcome.decidedBy);
+        if (index < ROUNDS - 1) {
+          const restStart = performance.now();
+          await sleep(800);
+          restGaps.push(performance.now() - restStart);
+        }
+      }
+      return { overshoots, restGaps, deciders };
+    };
+
+    // 页面不可见时 rAF 被浏览器暂停，这是规范行为。
+    // 此时「双保险」退化成 timeupdate 精度，属于容错生效，不该判成失败。
+    const pageHidden = document.visibilityState !== "visible";
+    const loopVerdict = (overshoots, deciders, tight, mode) => {
+      if (deciders.includes("timeout")) return "fail";
+      const worst = Math.max(...overshoots);
+      const line = (mode === "hybrid" && pageHidden) ? 300 : tight;
+      return worst < line ? "pass" : worst < line * 2.2 ? "warn" : "fail";
+    };
+
+    const loopRuns = [
+      { id: "loop", mode: "timeupdate", tight: 120, label: "timeupdate" },
+      { id: "loopRaf", mode: "raf", tight: 60, label: "requestAnimationFrame" },
+      { id: "loopHybrid", mode: "hybrid", tight: 60, label: "rAF + timeupdate 双保险" }
+    ];
+    const loopScores = {};
+
+    for (const run of loopRuns) {
+      setResult(run.id, "running", "跑 3 轮…");
+      try {
+        const { overshoots, restGaps, deciders } = await runAbLoop(run.mode);
+        const state = loopVerdict(overshoots, deciders, run.tight, run.mode);
+        const timedOut = deciders.includes("timeout");
+        loopScores[run.id] = timedOut ? Infinity : Math.max(...overshoots);
+        const uniqueDeciders = [...new Set(deciders)].join("/");
+        const average = overshoots.reduce((a, b) => a + b, 0) / overshoots.length;
+        setResult(run.id, state,
+          (timedOut ? "超时失灵 · " : "") + "最坏 " + round(Math.max(...overshoots)) +
+          "ms · 平均 " + round(average) + "ms · 判定者 " + uniqueDeciders,
+          { method: run.label, overshootsMs: overshoots.map(v => round(v)),
+            worstMs: round(Math.max(...overshoots)), averageMs: round(average),
+            restGapsMs: restGaps.map(v => round(v)), deciders, start: START, end: END,
+            visibilityState: document.visibilityState });
+      } catch (error) {
+        loopScores[run.id] = Infinity;
+        setResult(run.id, "fail", error.message);
+      }
+      audio.pause();
+    }
+
+    const best = Math.min(...Object.values(loopScores));
+    const winner = Object.keys(loopScores).find(key => loopScores[key] === best);
+    const nameOf = { loop: "timeupdate", loopRaf: "rAF", loopHybrid: "双保险" };
+    if (Number.isFinite(best)) {
+      setGauge("gauge-loop", round(best), "ms", best < 60 ? null : best < 130 ? "warn" : "fail",
+        "最好的是「" + nameOf[winner] + "」方案");
+    } else {
+      setGauge("gauge-loop", "失灵", "", "fail", "三种方案在此环境都没停住");
+    }
+    audio.currentTime = 0;
+  };
+
+  /* ---------- 03 麦克风 ---------- */
+  const runMicAuto = () => {
+    const hasDevices = !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function");
+    setResult("mediaDevices", hasDevices ? "pass" : "fail",
+      hasDevices ? "getUserMedia 存在" : "navigator.mediaDevices 不可用");
+
+    if (typeof window.MediaRecorder !== "function") {
+      setResult("recorderTypes", "fail", "MediaRecorder 不存在");
+      return;
+    }
+    const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+    const supported = candidates.filter(type => MediaRecorder.isTypeSupported(type));
+    setResult("recorderTypes", supported.length ? "pass" : "fail",
+      supported.length ? supported.join("  ") : "无可用格式", { supported, candidates });
+  };
+
+  const runMicLive = async () => {
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+      setResult("permission", "fail", "接口不存在，无法请求");
+      setResult("roundTrip", "skip", "已跳过");
+      setResult("devices", "skip", "已跳过");
+      toast("这个环境拿不到麦克风");
+      return;
+    }
+
+    setResult("permission", "running", "等待授权…");
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setResult("permission", "pass", "已授权");
+    } catch (error) {
+      setResult("permission", "fail", error.name + "：" + error.message);
+      setResult("roundTrip", "skip", "无权限，已跳过");
+      setResult("devices", "skip", "无权限，已跳过");
+      return;
+    }
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter(device => device.kind === "audioinput");
+      setResult("devices", inputs.length ? "pass" : "warn",
+        inputs.length + " 个输入设备",
+        { labels: inputs.map(device => device.label || "(无名称)") });
+    } catch (error) {
+      setResult("devices", "warn", error.message);
+    }
+
+    setResult("roundTrip", "running", "录音 3 秒，请说话…");
+    toast("正在录音，随便说三秒");
+    try {
+      const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
+        .find(type => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks = [];
+      recorder.addEventListener("dataavailable", event => { if (event.data.size) chunks.push(event.data); });
+      const stopped = once(recorder, "stop", 8000);
+      recorder.start();
+      await sleep(3000);
+      recorder.stop();
+      await stopped;
+
+      const blob = new Blob(chunks, { type: mime || "audio/webm" });
+      if (!blob.size) throw new Error("录到 0 字节");
+      const url = URL.createObjectURL(blob);
+      const player = document.getElementById("recorded");
+      player.src = url;
+      document.getElementById("playback").classList.add("is-on");
+      let seconds = null;
+      try { await once(player, "loadedmetadata", 4000); seconds = round(player.duration, 2); } catch (_) {}
+      setResult("roundTrip", "pass",
+        (blob.size / 1024).toFixed(1) + " KB · " + (mime || "默认格式") + (seconds ? " · " + seconds + "s" : ""),
+        { bytes: blob.size, mimeType: mime, durationSeconds: seconds });
+      toast("录音成功，可以回听了");
+    } catch (error) {
+      setResult("roundTrip", "fail", error.message);
+    } finally {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  /* ---------- 04 产物能力 ---------- */
+  const runArtifact = async () => {
+    try {
+      const url = URL.createObjectURL(new Blob(["probe"], { type: "text/plain" }));
+      URL.revokeObjectURL(url);
+      setResult("blobUrl", "pass", "可创建");
+    } catch (error) {
+      setResult("blobUrl", "fail", error.message);
+    }
+
+    try {
+      const anchor = document.createElement("a");
+      const supported = "download" in anchor;
+      setResult("download", supported ? "pass" : "fail",
+        supported ? "属性受支持（是否落盘需人工确认）" : "不支持 download 属性");
+    } catch (error) {
+      setResult("download", "fail", error.message);
+    }
+
+    try {
+      localStorage.setItem("__probe__", "1");
+      localStorage.removeItem("__probe__");
+      setResult("storage", "pass", "可读写");
+    } catch (error) {
+      setResult("storage", "fail", error.name + "（多为 file:// 或隐私模式限制）");
+    }
+
+    setResult("idb", window.indexedDB ? "pass" : "fail", window.indexedDB ? "可用" : "不可用");
+
+    setResult("fetchLocal", "running", "尝试读取…");
+    try {
+      const response = await fetch(location.href, { method: "GET" });
+      setResult("fetchLocal", response.ok ? "pass" : "warn", "HTTP " + response.status);
+    } catch (error) {
+      setResult("fetchLocal", "warn", "被禁止（file:// 下属正常）", { message: error.message });
+    }
+  };
+
+  /* ---------- 结论 ---------- */
+  const summarize = () => {
+    const all = [...results.values()];
+    const fails = all.filter(item => item.state === "fail");
+    const warns = all.filter(item => item.state === "warn");
+    const tag = document.getElementById("verdict-tag");
+    const title = document.getElementById("verdict-title");
+    const text = document.getElementById("verdict-text");
+
+    // 阻塞项：这些不过，这个环境根本不能当训练容器
+    const blockers = ["dataUri", "play", "rate", "seek"]
+      .map(id => results.get(id))
+      .filter(item => item.state !== "idle");
+    const started = blockers.length > 0;
+    const blocked = blockers.filter(item => item.state === "fail");
+    // 精度项：不过只是句尾会拖尾，属于实现方案的选择题
+    const precision = ["loop", "loopRaf", "loopHybrid"].map(id => results.get(id)).filter(item => item.state !== "idle");
+    const precisionOk = precision.some(item => item.state === "pass");
+    const micOk = results.get("roundTrip").state === "pass";
+
+    if (!started) {
+      tag.textContent = "尚未体检";
+      title.textContent = "先点一下「开始体检」";
+      text.textContent = "音频类检测需要一次点击才能获得浏览器的播放许可。";
+      renderOutput();
+      return;
+    }
+
+    if (blocked.length) {
+      tag.textContent = "存在阻塞";
+      title.textContent = "音频运行时不完整，这个环境不能当训练容器";
+      text.textContent = "阻塞项：" + blocked.map(item => item.name).join("、") + "。换一个环境重跑，再对比导出的 JSON。";
+    } else if (precisionOk && micOk) {
+      tag.textContent = "全部通过";
+      title.textContent = "听、变速、循环、录音，这里全都能跑";
+      text.textContent = "这个环境可以直接作为影子跟读的运行时。把结果导出、标注好是哪个环境，就能定案了。";
+    } else if (precisionOk && !micOk) {
+      tag.textContent = "可听不可录";
+      title.textContent = "精听和影子跟读能跑，录音那条路要单独确认";
+      text.textContent = "播放、变速、单句循环都成立。录音项还没测或没拿到权限——点上面的「单测麦克风与录音」，拒绝授权也是有效结论。";
+    } else {
+      tag.textContent = "精度不足";
+      title.textContent = "能播能变速，但句尾停不准";
+      text.textContent = "两种句尾判定方案的超出量都偏大，影子跟读会明显多播一截。看 02 组里两行的对比数字，选超出更小的那个方案写进实现。";
+    }
+
+    // 三种句尾判定方案的横向结论
+    const worstOf = id => {
+      const row = results.get(id);
+      if (!row.detail || !row.detail.overshootsMs) return null;
+      if ((row.detail.deciders || []).includes("timeout")) return Infinity;
+      return Math.max(...row.detail.overshootsMs);
+    };
+    const scores = { timeupdate: worstOf("loop"), rAF: worstOf("loopRaf"), 双保险: worstOf("loopHybrid") };
+    const measured = Object.entries(scores).filter(([, value]) => value != null);
+    if (!blocked.length && measured.length) {
+      const hidden = results.get("visibility").state === "warn";
+      text.textContent += " 句尾判定实测（最坏值）：" +
+        measured.map(([name, value]) =>
+          name + " " + (Number.isFinite(value) ? Math.round(value) + "ms" : "失灵")
+        ).join("，") + "。";
+      const hybridAlive = Number.isFinite(scores["双保险"]);
+      if (hybridAlive) {
+        text.textContent += " 双保险是唯一在两种页面可见性下都不失灵的方案，建议采用它。";
+      }
+      if (hidden) {
+        text.textContent += " 本次页面处于不可见状态，rAF 被浏览器规范性地暂停，" +
+          "所以它单独用会跑飞、双保险会退化成 timeupdate 精度。" +
+          "要看 rAF 的真实精度，请在能看见页面的窗口里再跑一次。";
+      }
+    }
+    if (warns.length && !blocked.length) {
+      text.textContent += "（另有 " + warns.length + " 项为降级状态，不阻塞使用。）";
+    }
+    renderOutput();
+  };
+
+  const renderOutput = () => {
+    const payload = {
+      probeVersion: 1,
+      environmentTag: document.getElementById("env-tag").value,
+      capturedAt: new Date().toISOString(),
+      location: { protocol: location.protocol, href: location.href },
+      isSecureContext: window.isSecureContext === true,
+      userAgent: navigator.userAgent,
+      viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio || 1 },
+      checks: [...results.values()].map(item => ({
+        id: item.id, group: item.group, name: item.name,
+        state: item.state, value: item.value, detail: item.detail
+      })),
+      summary: {
+        pass: [...results.values()].filter(item => item.state === "pass").length,
+        warn: [...results.values()].filter(item => item.state === "warn").length,
+        fail: [...results.values()].filter(item => item.state === "fail").length,
+        idle: [...results.values()].filter(item => item.state === "idle").length
+      }
+    };
+    document.getElementById("output").value = JSON.stringify(payload, null, 2);
+    return payload;
+  };
+
+  /* ---------- 事件 ---------- */
+  const runButton = document.getElementById("btn-run");
+  const micButton = document.getElementById("btn-mic");
+
+  runButton.addEventListener("click", async () => {
+    runButton.disabled = true;
+    runButton.textContent = "体检中…";
+    try {
+      runEnvironment();
+      runMicAuto();
+      await runArtifact();
+      await runAudioAuto();
+      await runAudioLive();
+    } catch (error) {
+      toast("体检中断：" + error.message);
+    } finally {
+      runButton.disabled = false;
+      runButton.textContent = "▶ 重新体检";
+      summarize();
+    }
+  });
+
+  micButton.addEventListener("click", async () => {
+    micButton.disabled = true;
+    micButton.textContent = "测试中…";
+    try { await runMicLive(); } finally {
+      micButton.disabled = false;
+      micButton.textContent = "🎙 重测麦克风与录音";
+      summarize();
+    }
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", () => location.reload());
+  document.getElementById("env-tag").addEventListener("change", renderOutput);
+
+  document.getElementById("btn-copy").addEventListener("click", async () => {
+    const text = document.getElementById("output").value;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("已复制到剪贴板");
+    } catch (_) {
+      const area = document.getElementById("output");
+      area.removeAttribute("readonly");
+      area.select();
+      document.execCommand("copy");
+      area.setAttribute("readonly", "readonly");
+      toast("已复制（降级方式）");
+    }
+  });
+
+  document.getElementById("btn-download").addEventListener("click", () => {
+    const payload = renderOutput();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const anchor = document.createElement("a");
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = "runtime-probe-" + payload.environmentTag + ".json";
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(anchor.href), 4000);
+    toast("已触发下载，请确认文件是否真的落盘");
+  });
+
+  // 导航高亮
+  const links = [...document.querySelectorAll(".nav a")];
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      links.forEach(link => link.classList.toggle("is-active", link.getAttribute("href") === "#" + entry.target.id));
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("section").forEach(node => observer.observe(node));
+
+  // 环境项与不需要手势的检测立即跑，其余等点击
+  runEnvironment();
+  runMicAuto();
+  runArtifact().then(renderOutput);
+})();
+</script>
+</body>
+</html>

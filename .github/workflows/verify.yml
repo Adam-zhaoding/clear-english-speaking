@@ -1,0 +1,34 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  web-and-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+
+  desktop-shell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: "src-tauri -> target" }
+      # lib.rs embeds the engine with include_bytes!, so a placeholder is
+      # enough to type-check and unit-test the desktop shell.
+      - name: Provide an engine placeholder
+        run: |
+          New-Item -ItemType Directory -Force src-tauri/resources | Out-Null
+          Set-Content -Path src-tauri/resources/bbc-course-agent.exe -Value "placeholder" -Encoding ascii
+      - run: cargo test --manifest-path src-tauri/Cargo.toml

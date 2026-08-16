@@ -1,0 +1,35 @@
+name: release-agent
+
+# The desktop executable already embeds this engine. This workflow only
+# publishes it standalone for users who want to run the build pipeline from a
+# terminal, so it must use the same collection flags as the desktop build --
+# a plain --onefile misses faster-whisper and produces a binary that cannot
+# align audio.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller keyring pypdf faster-whisper
+      - run: |
+          python -m PyInstaller --noconfirm --clean --onefile --name bbc-course-agent --paths . `
+            --collect-all keyring --collect-all pypdf --collect-all faster_whisper agent/entrypoint.py
+      - name: Smoke-test the packaged engine
+        run: |
+          ./dist/bbc-course-agent.exe demo-package --output "$env:RUNNER_TEMP/demo.zip"
+          if (-not (Test-Path "$env:RUNNER_TEMP/demo.zip")) { throw "engine did not produce a course package" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bbc-course-agent-windows
+          path: dist/bbc-course-agent.exe
+          if-no-files-found: error

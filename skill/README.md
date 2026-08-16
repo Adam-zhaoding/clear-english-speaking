@@ -1,4 +1,4 @@
-# Clear English · 给 WorkBuddy 用的英语精听技能
+# Clear English Speaking · 给 WorkBuddy 用的英语精听技能
 
 把 BBC 6 Minute English 的一期节目，变成你电脑上一个**双击就能打开**的英语练习页：
 整集精听（变速、快进快退）+ 3–5 句影子跟读（单句循环、隐藏字幕、看翻译、录音回听）。
@@ -12,7 +12,7 @@
 
 > 帮我装一个英语学习技能，然后给我备今天的课。
 >
-> 1. 把 `https://github.com/你的用户名/clear-english` 这个仓库下载到本地
+> 1. 把 `https://github.com/你的用户名/clear-english-speaking` 这个仓库下载到本地
 > 2. 打开里面的 `SKILL.md`，完全按它写的流程做
 > 3. 如果提示缺 Python 依赖，先执行 `pip install requests beautifulsoup4 pypdf faster-whisper`
 > 4. 全部做完之后，把生成的 HTML 文件的完整路径告诉我

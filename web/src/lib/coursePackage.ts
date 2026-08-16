@@ -21,7 +21,7 @@ const isSafeEntryName = (name: string) =>
 
 export function validateLesson(lesson: Lesson): void {
   if (lesson.schema_version !== 1 || !lesson.episode_id || !lesson.audio?.file || !lesson.transcript?.file) {
-    throw new CoursePackageError("课程包缺少版本或必填字段，可能不是 Clear English 课程。");
+    throw new CoursePackageError("课程包缺少版本或必填字段，可能不是 Clear English Speaking 课程。");
   }
   if (!isSafeEntryName(lesson.audio.file) || !isSafeEntryName(lesson.transcript.file)) {
     throw new CoursePackageError("课程包内的文件名不合法，已拒绝导入。");
@@ -56,7 +56,7 @@ export function validateLesson(lesson: Lesson): void {
 
 export async function readCoursePackage(file: File): Promise<Course> {
   if (file.size > MAX_ARCHIVE_BYTES) {
-    throw new CoursePackageError("这个 ZIP 超过 200 MB，不像是 Clear English 课程包。");
+    throw new CoursePackageError("这个 ZIP 超过 200 MB，不像是 Clear English Speaking 课程包。");
   }
   let zip: JSZip;
   try {

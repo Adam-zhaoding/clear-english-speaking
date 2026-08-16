@@ -33,5 +33,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Clear-English-Windows-portable
-          path: src-tauri/target/release/clear-english.exe
+          path: src-tauri/target/release/clear-english-speaking.exe
           if-no-files-found: error

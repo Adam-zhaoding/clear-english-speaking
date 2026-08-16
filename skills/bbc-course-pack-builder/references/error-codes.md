@@ -33,7 +33,7 @@ existing ZIP for the same episode is always preserved.
 | Code | Meaning | Repair |
 |---|---|---|
 | `audio_duration_unavailable` | The downloaded audio is not a parseable MP3/WAV. | Check the network and retry. |
-| `whisper_dependency_unavailable` | `faster-whisper` is not present in this build. | Reinstall Clear English. |
+| `whisper_dependency_unavailable` | `faster-whisper` is not present in this build. | Reinstall Clear English Speaking. |
 | `whisper_model_unavailable` | The speech model could not be loaded or downloaded. | The first build downloads ~500 MB; confirm connectivity and retry. |
 | `whisper_words_missing` | Alignment produced no words at all. | Choose another episode. |
 | `sentence_alignment_failed` | A sentence could not be located in the audio at ≥80% ordered word coverage. | Regenerate the draft or choose another episode; never fabricate timestamps. |

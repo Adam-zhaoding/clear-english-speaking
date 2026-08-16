@@ -153,7 +153,7 @@ def discover_candidates(index_url: str) -> list[str]:
 
 
 def _download(url: str, target: Path) -> None:
-    request = urllib.request.Request(url, headers={"User-Agent": "ClearEnglish/0.1 (personal learning tool)"})
+    request = urllib.request.Request(url, headers={"User-Agent": "ClearEnglishSpeaking/0.1 (personal learning tool)"})
     try:
         with urllib.request.urlopen(request, timeout=60) as source, target.open("wb") as output:
             shutil.copyfileobj(source, output)
@@ -281,7 +281,7 @@ def build_from_official_page(page_url: str, settings: dict[str, Any], external_d
         progress("reuse", "这一集已经构建过，直接使用本机已有课程。")
         return target
     api_key = get_model_key(settings["model"].get("api_key_ref", "clear-english-model-key"))
-    with tempfile.TemporaryDirectory(prefix="clear-english-bbc-") as raw:
+    with tempfile.TemporaryDirectory(prefix="clear-english-speaking-bbc-") as raw:
         root = Path(raw); audio = root / "audio.mp3"; transcript = root / "transcript.pdf"
         progress("download", "正在从 BBC 官方地址下载音频与正式原文。")
         _download(assets.mp3_url, audio); _download(assets.transcript_url, transcript)

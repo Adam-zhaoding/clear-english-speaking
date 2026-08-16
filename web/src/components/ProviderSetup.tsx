@@ -116,9 +116,9 @@ export function ProviderSetup({ onImportCourse }: Props) {
   };
 
   const runCodex = () => guard(async () => {
-    if (!localStorage.getItem("clear-english-codex-consent")) {
+    if (!localStorage.getItem("clear-english-speaking-codex-consent")) {
       if (!window.confirm("将使用这台电脑当前已登录 Codex 账号的配额来准备一节课。首次确认后，后续备课将静默执行。继续吗？")) return;
-      localStorage.setItem("clear-english-codex-consent", "yes");
+      localStorage.setItem("clear-english-speaking-codex-consent", "yes");
     }
     const id = await startCodexJob();
     setMessage(`Codex 正在准备教学草案（任务 ${id.slice(0, 8)}）。完成后会自动构建并导入。`);
@@ -168,7 +168,7 @@ export function ProviderSetup({ onImportCourse }: Props) {
       <div className="section-title"><h3>自动备课需要桌面版</h3><Robot size={21} /></div>
       <p className="muted">
         你现在打开的是网页版。网页版可以完整练习：用右上角“导入 ZIP 课程包”把课程导入即可。
-        自动从 BBC 官方来源备课需要下载 Windows 桌面版 Clear English。
+        自动从 BBC 官方来源备课需要下载 Windows 桌面版 Clear English Speaking。
       </p>
     </section>;
   }
@@ -186,7 +186,7 @@ export function ProviderSetup({ onImportCourse }: Props) {
       {provider === "workbuddy" && <div className="provider-panel">
         <b>{status?.workbuddyAvailable ? "已检测到 WorkBuddy" : "未检测到 WorkBuddy"}</b>
         <p>{status?.workbuddyAvailable
-          ? "Clear English 会准备好课程任务；WorkBuddy 目前不能被外部程序自动新建会话或发送消息，所以需要你手动发送一次。"
+          ? "Clear English Speaking 会准备好课程任务；WorkBuddy 目前不能被外部程序自动新建会话或发送消息，所以需要你手动发送一次。"
           : "请先安装 WorkBuddy 并至少启动一次，然后回到这里。"}</p>
         {!setup && <button className="primary" disabled={!status?.workbuddyAvailable || busy} onClick={() => void connect()}>
           <Sparkle size={18} />准备 WorkBuddy 任务
@@ -197,7 +197,7 @@ export function ProviderSetup({ onImportCourse }: Props) {
             <li>点击“打开 WorkBuddy”；若它已打开，请切换到该窗口。</li>
             <li>在 WorkBuddy 点击“新建会话”。</li>
             <li>点击“复制任务”，在新会话按 Ctrl+V，然后发送。</li>
-            <li>回到这里等待，Clear English 会自动完成校验、构建和导入。</li>
+            <li>回到这里等待，Clear English Speaking 会自动完成校验、构建和导入。</li>
           </ol>
           <div className="handoff-actions">
             <button className="secondary" onClick={() => void openBuddy()}>打开 WorkBuddy</button>

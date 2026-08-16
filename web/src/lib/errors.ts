@@ -19,7 +19,7 @@ const messages: Record<string, { reason: string; next: string }> = {
   sentence_alignment_failed: { reason: "有句子没能在音频里定位到（可能音频与文稿版本不一致）。", next: "点“重新备课”，或换一集。" },
   audio_duration_unavailable: { reason: "下载到的音频文件损坏，读不出时长。", next: "检查网络后重试。" },
   downloaded_file_empty: { reason: "从 BBC 下载的文件是空的。", next: "检查网络后重试。" },
-  whisper_dependency_unavailable: { reason: "本机语音对齐组件缺失。", next: "重新安装 Clear English。" },
+  whisper_dependency_unavailable: { reason: "本机语音对齐组件缺失。", next: "重新安装 Clear English Speaking。" },
   whisper_model_unavailable: { reason: "语音识别模型下载失败。", next: "确认能正常联网后重试；首次需要下载约 500MB。" },
   whisper_words_missing: { reason: "语音识别没有从音频里得到任何词。", next: "换一集试试。" },
   external_draft_invalid: { reason: "备课助手写出的草案格式不对。", next: "回到备课中心点“重新备课”，把任务重新发送一次给助手。" },

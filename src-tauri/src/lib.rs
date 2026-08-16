@@ -95,7 +95,7 @@ fn workbuddy_home() -> PathBuf {
 
 fn workspace_root() -> Result<PathBuf, String> {
     let root = local_app_data()?.join("workbuddy-workspace");
-    fs::create_dir_all(root.join(".clear-english").join("jobs")).map_err(|error| error.to_string())?;
+    fs::create_dir_all(root.join(".clear-english-speaking").join("jobs")).map_err(|error| error.to_string())?;
     Ok(root)
 }
 
@@ -133,12 +133,12 @@ fn skill_source(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn workbuddy_prompt(job_path: &Path) -> String {
-    format!("请为 Clear English 完成一节 BBC 6 Minute English 备课任务。\n\n任务文件：{}\n\n请读取任务文件，选择一篇未学习过的 BBC Learning English 官方 6 Minute English 节目。仅从官方 Transcript 逐字选择 5–6 句，并生成中文释义、词汇、听力提示和理解检查。不要下载或分发音频、PDF、课程 ZIP，也不要写入工作区外的文件。\n\n将严格 JSON 草案写到任务文件中 output_draft 指定的路径。必须包含 bbc_page_url、title、sentences；每个 sentence 至少有 text 与 translation_zh。完成后只报告“草案已写入”。", job_path.display())
+    format!("请为 Clear English Speaking 完成一节 BBC 6 Minute English 备课任务。\n\n任务文件：{}\n\n请读取任务文件，选择一篇未学习过的 BBC Learning English 官方 6 Minute English 节目。仅从官方 Transcript 逐字选择 5–6 句，并生成中文释义、词汇、听力提示和理解检查。不要下载或分发音频、PDF、课程 ZIP，也不要写入工作区外的文件。\n\n将严格 JSON 草案写到任务文件中 output_draft 指定的路径。必须包含 bbc_page_url、title、sentences；每个 sentence 至少有 text 与 translation_zh。完成后只报告“草案已写入”。", job_path.display())
 }
 
 fn write_job(root: &Path, provider: &str) -> Result<(String, PathBuf, String), String> {
     let id = Uuid::new_v4().to_string();
-    let job = root.join(".clear-english").join("jobs").join(&id);
+    let job = root.join(".clear-english-speaking").join("jobs").join(&id);
     let output = job.join("output");
     fs::create_dir_all(&output).map_err(|error| error.to_string())?;
     let draft = output.join("lesson-draft.json");
@@ -215,7 +215,7 @@ fn start_codex_job() -> Result<String, String> {
     let output_path = job_path.parent().ok_or("任务目录无效。")?.join("output").join("lesson-draft.json");
     let schema = json!({"type":"object","required":["bbc_page_url","sentences"],"properties":{"bbc_page_url":{"type":"string"},"title":{"type":"string"},"sentences":{"type":"array","minItems":5,"maxItems":6,"items":{"type":"object","required":["text","translation_zh"],"properties":{"text":{"type":"string"},"translation_zh":{"type":"string"},"glossary":{"type":"array"},"diagnosis_tags":{"type":"array"},"listening_focus":{"type":"string"},"comprehension_check":{"type":"string"}}}}}});
     fs::write(&schema_path, serde_json::to_vec_pretty(&schema).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
-    let prompt = format!("Read this local Clear English job specification: {}. Find one eligible official BBC Learning English 6 Minute English episode. Return only the required JSON draft. Do not write files, do not download BBC assets, and use only official Transcript wording for the 5-6 selected English sentences.", job_path.display());
+    let prompt = format!("Read this local Clear English Speaking job specification: {}. Find one eligible official BBC Learning English 6 Minute English episode. Return only the required JSON draft. Do not write files, do not download BBC assets, and use only official Transcript wording for the 5-6 selected English sentences.", job_path.display());
     thread::spawn(move || {
         let mut command = Command::new("codex");
         let result = run_without_console(command
@@ -236,7 +236,7 @@ fn job_dir(job_id: &str) -> Result<PathBuf, String> {
     if job_id.is_empty() || !job_id.chars().all(|value| value.is_ascii_alphanumeric() || value == '-') {
         return Err("任务编号无效。".into());
     }
-    let path = workspace_root()?.join(".clear-english").join("jobs").join(job_id);
+    let path = workspace_root()?.join(".clear-english-speaking").join("jobs").join(job_id);
     if !path.is_dir() { return Err("找不到这个备课任务，它可能已经被清理。".into()); }
     Ok(path)
 }
@@ -273,7 +273,7 @@ fn job_message(status: &str, provider: &str) -> String {
 
 #[tauri::command]
 fn list_desktop_jobs() -> Result<Vec<DesktopJob>, String> {
-    let root = workspace_root()?.join(".clear-english").join("jobs");
+    let root = workspace_root()?.join(".clear-english-speaking").join("jobs");
     let mut jobs = Vec::new();
     for entry in fs::read_dir(root).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
@@ -346,7 +346,7 @@ fn engine_settings() -> Result<(PathBuf, Value), String> {
     Ok((path, value))
 }
 
-fn schedule_task_name() -> &'static str { "Clear English Background" }
+fn schedule_task_name() -> &'static str { "Clear English Speaking Background" }
 
 fn scheduled_background() -> Result<(), String> {
     let (_, settings) = engine_settings()?;
@@ -564,7 +564,7 @@ fn read_course_bytes(path: String) -> Result<tauri::ipc::Response, String> {
 #[tauri::command]
 fn configure_api(configuration: ApiConfiguration) -> Result<(), String> {
     if !configuration.base_url.starts_with("https://") || configuration.model.trim().is_empty() || configuration.api_key.trim().is_empty() { return Err("请填写 HTTPS 服务地址、模型名称和 API Key。".into()); }
-    let entry = Entry::new("clear-english", "clear-english-model-key").map_err(|error| error.to_string())?;
+    let entry = Entry::new("clear-english-speaking", "clear-english-model-key").map_err(|error| error.to_string())?;
     entry.set_password(&configuration.api_key).map_err(|error| error.to_string())?;
     let settings_path = engine_home()?.join("settings.json");
     let mut value = if settings_path.is_file() { serde_json::from_slice(&fs::read(&settings_path).map_err(|error| error.to_string())?).unwrap_or_else(|_| json!({})) } else { json!({}) };
@@ -618,7 +618,7 @@ pub fn run() {
             open_transcript, open_external
         ])
         .run(tauri::generate_context!())
-        .expect("Clear English desktop application failed to start");
+        .expect("Clear English Speaking desktop application failed to start");
 }
 
 #[cfg(test)]

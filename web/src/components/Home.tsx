@@ -72,7 +72,7 @@ export function Home({ course, courses, records, loading, onSelectCourse, goPrac
 
       <article className="card build-card">
         <div className="section-title"><h3>本次备课</h3><Sparkle size={22} /></div>
-        <p>Clear English 会在你的电脑上，从 BBC 官方来源构建课程并永久保存在本机。</p>
+        <p>Clear English Speaking 会在你的电脑上，从 BBC 官方来源构建课程并永久保存在本机。</p>
         <button className="quiet-button" onClick={goStudio}>打开备课中心 <ArrowRight size={16} /></button>
       </article>
     </section>

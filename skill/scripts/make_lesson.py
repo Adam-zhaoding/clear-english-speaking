@@ -1,4 +1,4 @@
-"""Clear English 备课流水线。
+"""Clear English Speaking 备课流水线。
 
 分成两步，中间留给 WorkBuddy 做语言判断：
 
@@ -458,7 +458,7 @@ def command_build(args: argparse.Namespace) -> None:
 
 # --------------------------------------------------------------------------- CLI
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Clear English 备课流水线")
+    parser = argparse.ArgumentParser(description="Clear English Speaking 备课流水线")
     sub = parser.add_subparsers(dest="command", required=True)
 
     prepare = sub.add_parser("prepare", help="下载官方素材并做全文对齐")

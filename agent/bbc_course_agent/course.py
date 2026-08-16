@@ -72,7 +72,7 @@ def build_manifest(root: Path, names: list[str]) -> dict[str, Any]:
 def write_package(destination: Path, lesson: dict[str, Any], audio_path: Path, transcript_path: Path) -> Path:
     validate_lesson(lesson)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="clear-english-") as raw:
+    with tempfile.TemporaryDirectory(prefix="clear-english-speaking-") as raw:
         root = Path(raw)
         audio_name = str(lesson["audio"]["file"]); transcript_name = str(lesson["transcript"]["file"])
         (root / audio_name).write_bytes(audio_path.read_bytes()); (root / transcript_name).write_bytes(transcript_path.read_bytes())

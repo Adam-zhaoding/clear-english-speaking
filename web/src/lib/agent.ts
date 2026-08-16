@@ -1,7 +1,7 @@
 import type { AgentStatus } from "./types";
 
 const base = "http://127.0.0.1:8765";
-const tokenKey = "clear-english-agent-token";
+const tokenKey = "clear-english-speaking-agent-token";
 const headers = () => ({ "X-Clear-English-Token": sessionStorage.getItem(tokenKey) || "" });
 
 export const isAgentPaired = () => Boolean(sessionStorage.getItem(tokenKey));
@@ -27,7 +27,7 @@ export async function pairAgent(code: string): Promise<void> {
   const response = await fetch(`${base}/pair`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }), signal: AbortSignal.timeout(3000) });
   if (!response.ok) throw new Error("配对码无效。请查看本地服务启动窗口。 ");
   sessionStorage.setItem(tokenKey, (await response.json() as { token: string }).token);
-  window.dispatchEvent(new Event("clear-english-agent-paired"));
+  window.dispatchEvent(new Event("clear-english-speaking-agent-paired"));
 }
 
 export async function fetchAgentCourses(): Promise<File[]> {

@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$project = if (Test-Path 'D:\ClearEnglish') { 'D:\ClearEnglish' } else { Resolve-Path (Join-Path $PSScriptRoot '..') }
+$project = if (Test-Path 'D:\ClearEnglishSpeaking') { 'D:\ClearEnglishSpeaking' } else { Resolve-Path (Join-Path $PSScriptRoot '..') }
 Set-Location $project
 $gnuTools = Join-Path $env:LOCALAPPDATA 'ClearEnglishBuildTools\w64devkit\bin'
 if (Test-Path $gnuTools) {

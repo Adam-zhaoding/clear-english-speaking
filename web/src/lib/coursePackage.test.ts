@@ -9,7 +9,7 @@ import type { Lesson, Sentence } from "./types";
 // the Node test runner does not provide.
 if (typeof URL.createObjectURL !== "function") {
   let counter = 0;
-  URL.createObjectURL = () => `blob:clear-english/${(counter += 1)}`;
+  URL.createObjectURL = () => `blob:clear-english-speaking/${(counter += 1)}`;
   URL.revokeObjectURL = () => undefined;
 }
 

@@ -1,9 +1,9 @@
 ---
-name: clear-english
+name: clear-english-speaking
 description: 用 BBC Learning English 6 Minute English 的官方素材，生成一个可以双击打开的英语精听 + 影子跟读练习页面。当用户说「备今天的英语课」「做一节 BBC 英语课」「生成跟读材料」「练英语口语」「6 Minute English」，或要排查备课失败时使用。
 ---
 
-# Clear English 备课
+# Clear English Speaking 备课
 
 把 BBC 6 Minute English 的一期节目，变成用户电脑上一个可以双击打开的 HTML 练习页：
 整集精听（变速、快进快退）+ 3–5 句影子跟读（单句循环、隐藏字幕、翻译、录音）。

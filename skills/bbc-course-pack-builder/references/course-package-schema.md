@@ -1,4 +1,4 @@
-# Clear English course package schema v1
+# Clear English Speaking course package schema v1
 
 ```text
 episode.zip

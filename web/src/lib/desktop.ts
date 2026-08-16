@@ -66,7 +66,7 @@ export function onBuildProgress(handler: (progress: BuildProgress) => void): () 
   return () => void pending.then((stop) => stop());
 }
 
-export function courseFileFromBytes(data: ArrayBuffer | Uint8Array, fileName = "clear-english-course.zip") {
+export function courseFileFromBytes(data: ArrayBuffer | Uint8Array, fileName = "clear-english-speaking-course.zip") {
   // Both forms are valid BlobParts at runtime; the cast is only needed because
   // the DOM lib types Uint8Array's buffer as possibly shared.
   return new File([data as BlobPart], fileName, { type: "application/zip" });
@@ -101,6 +101,6 @@ export async function openExternal(url: string): Promise<void> {
 
 /** Read a course from the local library and wrap it as a File for the importer. */
 export async function readCourseFile(path: string): Promise<File> {
-  const name = path.split(/[\\/]/).pop() || "clear-english-course.zip";
+  const name = path.split(/[\\/]/).pop() || "clear-english-speaking-course.zip";
   return courseFileFromBytes(await readCourseBytes(path), name);
 }

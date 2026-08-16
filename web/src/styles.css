@@ -45,8 +45,8 @@
 
 /* Studio: live build progress and the job list. */
 .build-progress { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: #eef4ea; color: #3f6349; font-size: 13px; }
-.spinner { width: 15px; height: 15px; flex-shrink: 0; border: 2px solid #c3d8c5; border-top-color: #3f6349; border-radius: 50%; animation: clear-english-spin .9s linear infinite; }
-@keyframes clear-english-spin { to { transform: rotate(360deg); } }
+.spinner { width: 15px; height: 15px; flex-shrink: 0; border: 2px solid #c3d8c5; border-top-color: #3f6349; border-radius: 50%; animation: clear-english-speaking-spin .9s linear infinite; }
+@keyframes clear-english-speaking-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
 .job-list { margin-top: 20px; }
 .job-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf0e8; }

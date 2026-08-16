@@ -12,7 +12,7 @@ const items: { view: View; label: string; icon: typeof House }[] = [
 
 export function Sidebar({ view, setView, courseCount }: { view: View; setView: (value: View) => void; courseCount: number }) {
   return <aside className="sidebar">
-    <div className="brand"><span>CE</span><b>Clear English</b></div>
+    <div className="brand"><span>CE</span><b>Clear English Speaking</b></div>
     <nav>
       {items.map(({ view: itemView, label, icon: Icon }) => (
         <button key={itemView} className={view === itemView ? "active" : ""} onClick={() => setView(itemView)}>

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Clear English",
+  "productName": "Clear English Speaking",
   "version": "0.2.0",
   "identifier": "com.clearenglish.player",
   "build": {
@@ -10,7 +10,7 @@
     "frontendDist": "../web/dist"
   },
   "app": {
-    "windows": [{ "label": "main", "title": "Clear English", "width": 1440, "height": 940, "minWidth": 1080, "minHeight": 720 }],
+    "windows": [{ "label": "main", "title": "Clear English Speaking", "width": 1440, "height": 940, "minWidth": 1080, "minHeight": 720 }],
     "security": { "csp": null }
   },
   "bundle": {

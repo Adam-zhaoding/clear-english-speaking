@@ -1,4 +1,4 @@
-"""Import a weekly BBC shadow-reading player page into a Clear English course.
+"""Import a weekly BBC shadow-reading player page into a Clear English Speaking course.
 
 The user's Hermes routine already produces a self-contained
 ``*.pc-player.html`` every week: official BBC audio embedded as a data URI,
@@ -184,7 +184,7 @@ def build_from_player_html(html_path: Path, settings: dict[str, Any]) -> Path:
         progress("reuse", "这一集已经在你的课程库里，直接使用已有课程。")
         return target
 
-    with tempfile.TemporaryDirectory(prefix="clear-english-player-") as raw:
+    with tempfile.TemporaryDirectory(prefix="clear-english-speaking-player-") as raw:
         root = Path(raw)
         audio = root / f"audio.{parsed['audio_kind']}"
         audio.write_bytes(parsed["audio_bytes"])

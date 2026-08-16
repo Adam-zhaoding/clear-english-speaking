@@ -1,4 +1,4 @@
-# Clear English
+# Clear English Speaking
 
 一个 Windows 优先、完全本地优先的英语听力与口语练习播放器。它把 BBC Learning English · 6 Minute English 的单期节目，在你自己的电脑上做成可离线练习的课程包，然后带你走完 **裸听 → 标记卡点（A/B/C）→ 对照 → 原速回测** 的闭环。
 
@@ -8,7 +8,7 @@
 
 ## 给普通用户：三步开始
 
-1. 从 [Releases](../../releases) 下载 `clear-english.exe`，放到任意文件夹，双击打开。
+1. 从 [Releases](../../releases) 下载 `clear-english-speaking.exe`，放到任意文件夹，双击打开。
    不需要安装 Node、Python、ffmpeg，也不需要打开命令行。
 2. 首次打开时，播放器会自带一节**演示课**。点「开始今天的训练」，能听到声音就说明一切正常。
 3. 想练真实的 BBC 课程，进「备课」页，选一种你已经装好的助手：
@@ -19,7 +19,7 @@
 | **Codex** | 本机已登录 Codex CLI | 点一次「使用 Codex 立即备课」 |
 | **我的 API** | 自己的 OpenAI 兼容服务 | 填服务地址、模型名、Key，点「立即备课」 |
 
-发送任务后回到 Clear English 等待即可。剩下的下载、逐句校验、时间轴对齐、打包和导入都由播放器在本机自动完成，界面会显示当前进行到哪一步。
+发送任务后回到 Clear English Speaking 等待即可。剩下的下载、逐句校验、时间轴对齐、打包和导入都由播放器在本机自动完成，界面会显示当前进行到哪一步。
 
 > **首次备课需要联网下载约 500 MB 的语音识别模型，只需一次。** 之后备课全程离线可用，已导入的课程断网也能练。
 
@@ -47,15 +47,15 @@
 
 | 数据 | 位置 | 是否上传 |
 |---|---|---|
-| 课程 ZIP | `%LOCALAPPDATA%\ClearEnglish\engine\courses` | 否 |
-| 引擎设置 | `%LOCALAPPDATA%\ClearEnglish\engine\settings.json`（不含 Key 明文） | 否 |
-| API Key | Windows 凭据管理器，服务名 `clear-english` | 否 |
+| 课程 ZIP | `%LOCALAPPDATA%\EnglishSpeakingPlayer\engine\courses` | 否 |
+| 引擎设置 | `%LOCALAPPDATA%\EnglishSpeakingPlayer\engine\settings.json`（不含 Key 明文） | 否 |
+| API Key | Windows 凭据管理器，服务名 `clear-english-speaking` | 否 |
 | 已导入课程与练习记录 | 应用内置 WebView 的本地存储 | 否 |
 | 跟读录音 | 你手动保存到下载目录 | 否，且不做发音评分 |
 
 **备份**：复制上面的 `courses` 目录，并在「复盘」页导出学习记录。不要复制或分享系统凭据库。
 
-**卸载**：删除 `clear-english.exe`，再删除 `%LOCALAPPDATA%\ClearEnglish` 目录即可。若开过自动备课，请一并删除 Windows 任务计划程序中的 `Clear English Background`。
+**卸载**：删除 `clear-english-speaking.exe`，再删除 `%LOCALAPPDATA%\EnglishSpeakingPlayer` 目录即可。若开过自动备课，请一并删除 Windows 任务计划程序中的 `Clear English Speaking Background`。
 
 ---
 
@@ -68,7 +68,7 @@
 「备课」页的任务列表会直接写出中文原因和下一步，并提供「重试」。失败不会覆盖你已有的课程。
 
 **为什么 WorkBuddy 要我手动发送一次？**
-WorkBuddy 桌面版目前没有可供外部程序调用的公开接口，Clear English 无法替你新建会话或点发送。所以它只负责把任务准备好并复制到剪贴板，发送这一步必须由你完成。这是产品的真实边界，不是待修复的缺陷。
+WorkBuddy 桌面版目前没有可供外部程序调用的公开接口，Clear English Speaking 无法替你新建会话或点发送。所以它只负责把任务准备好并复制到剪贴板，发送这一步必须由你完成。这是产品的真实边界，不是待修复的缺陷。
 
 **能识别我的发音、给我打分吗？**
 不能，也不打算做。单次语音识别的误判不足以证明你发音有问题。跟读录音只用于你自己回听。
@@ -96,9 +96,9 @@ npm run dev
 powershell -ExecutionPolicy Bypass -File scripts\build-desktop.ps1 -NoBundle
 ```
 
-> 使用 GNU 工具链时，Windows 的资源编译器不接受带空格的路径。脚本会优先使用 `D:\ClearEnglish` 这样的无空格 junction；如果你的仓库路径带空格，请先建一个：
+> 使用 GNU 工具链时，Windows 的资源编译器不接受带空格的路径。脚本会优先使用 `D:\ClearEnglishSpeaking` 这样的无空格 junction；如果你的仓库路径带空格，请先建一个：
 > ```powershell
-> cmd /c 'mklink /J "D:\ClearEnglish" "<你的仓库路径>"'
+> cmd /c 'mklink /J "D:\ClearEnglishSpeaking" "<你的仓库路径>"'
 > ```
 
 ### 仓库结构

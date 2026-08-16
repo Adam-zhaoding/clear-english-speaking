@@ -199,7 +199,7 @@ def _main() -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="Clear English local course agent")
+    parser = argparse.ArgumentParser(description="Clear English Speaking local course agent")
     parser.add_argument("command", nargs="?", default="serve",
                         choices=["serve", "demo-package", "status", "run-scheduled", "build-draft", "import-player"])
     parser.add_argument("--output", type=Path)

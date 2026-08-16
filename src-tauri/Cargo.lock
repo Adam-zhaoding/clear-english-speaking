@@ -350,7 +350,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "clear-english"
+name = "clear-english-speaking"
 version = "0.2.0"
 dependencies = [
  "arboard",

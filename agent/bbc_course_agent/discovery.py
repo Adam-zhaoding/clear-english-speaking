@@ -43,7 +43,7 @@ def fetch_official_page(page_url: str) -> str:
     Network problems are the most common reason a build stops on a normal
     machine, so they must never surface as a Python traceback.
     """
-    request = urllib.request.Request(page_url, headers={"User-Agent": "ClearEnglish/0.1 (personal learning tool)"})
+    request = urllib.request.Request(page_url, headers={"User-Agent": "ClearEnglishSpeaking/0.1 (personal learning tool)"})
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             return response.read().decode("utf-8", errors="ignore")

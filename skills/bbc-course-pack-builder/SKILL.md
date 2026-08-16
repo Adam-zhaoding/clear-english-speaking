@@ -1,6 +1,6 @@
 ---
 name: bbc-course-pack-builder
-description: Build a private, local Clear English course package from BBC Learning English 6 Minute English. Use whenever the user asks to download BBC 6 Minute English material, create/import a course ZIP, run scheduled local lesson preparation, or diagnose missing BBC audio, Transcript, alignment, course-package or local-agent failures.
+description: Build a private, local Clear English Speaking course package from BBC Learning English 6 Minute English. Use whenever the user asks to download BBC 6 Minute English material, create/import a course ZIP, run scheduled local lesson preparation, or diagnose missing BBC audio, Transcript, alignment, course-package or local-agent failures.
 compatibility: Requires the local bbc-course-agent; never requires Hermes, Feishu credentials, or cloud account access.
 ---
 
@@ -8,16 +8,16 @@ compatibility: Requires the local bbc-course-agent; never requires Hermes, Feish
 
 ## Purpose
 
-Create a local `audio + transcript.pdf + lesson.json + manifest.json` ZIP for Clear English. The generated ZIP remains on the user's device; it is not a public redistribution artifact.
+Create a local `audio + transcript.pdf + lesson.json + manifest.json` ZIP for Clear English Speaking. The generated ZIP remains on the user's device; it is not a public redistribution artifact.
 
 ## WorkBuddy desktop handoff
 
-When this Skill is installed by the Clear English desktop player, a task file appears under `.clear-english/jobs/<id>/task.json` in the current WorkBuddy workspace.
+When this Skill is installed by the Clear English Speaking desktop player, a task file appears under `.clear-english-speaking/jobs/<id>/task.json` in the current WorkBuddy workspace.
 
 1. Read that task file and obey its `output_draft` path.
 2. Use an official BBC Learning English 6 Minute English page and its formal Transcript to prepare **only** a teaching draft.
 3. Write one UTF-8 JSON file to `output_draft` with `bbc_page_url`, `title`, and 5–6 `sentences`. Every sentence needs verbatim `text` and `translation_zh`; optional fields are `glossary`, `diagnosis_tags`, `listening_focus`, and `comprehension_check`.
-4. Do not download MP3/PDF, create a ZIP, request an API key, write outside the task output, or modify WorkBuddy settings. The Clear English desktop app performs deterministic download, alignment, hash and ZIP validation after it sees this draft.
+4. Do not download MP3/PDF, create a ZIP, request an API key, write outside the task output, or modify WorkBuddy settings. The Clear English Speaking desktop app performs deterministic download, alignment, hash and ZIP validation after it sees this draft.
 5. End with only: `草案已写入`.
 
 This mode is designed for users who only installed WorkBuddy. A new WorkBuddy session is required after Skill installation so that WorkBuddy discovers the complete Skill directory.
@@ -42,7 +42,7 @@ This mode is designed for users who only installed WorkBuddy. A new WorkBuddy se
 
 ## Build workflow
 
-The Clear English desktop application embeds this engine and runs it for you;
+The Clear English Speaking desktop application embeds this engine and runs it for you;
 the steps below describe what it does after it receives a draft. A draft author
 performs step 4 only.
 

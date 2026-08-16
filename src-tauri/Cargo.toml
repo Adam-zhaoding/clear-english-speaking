@@ -1,12 +1,12 @@
 [package]
-name = "clear-english"
+name = "clear-english-speaking"
 version = "0.2.0"
 description = "Private, local English speaking practice"
-authors = ["Clear English"]
+authors = ["Clear English Speaking"]
 edition = "2021"
 
 [lib]
-name = "clear_english_lib"
+name = "clear_english_speaking_lib"
 crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]

@@ -1,5 +1,5 @@
 {
-  "name": "english-speaking-player",
+  "name": "clear-english-speaking",
   "private": true,
   "version": "0.1.0",
   "workspaces": ["web"],

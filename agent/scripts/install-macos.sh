@@ -17,4 +17,4 @@ cat > "$PLIST" <<EOF
 EOF
 launchctl bootout gui/$(id -u) "$PLIST" 2>/dev/null || true
 launchctl bootstrap gui/$(id -u) "$PLIST"
-echo "Installed local Clear English agent. Its editable in-app schedule runs while your Mac is awake."
+echo "Installed local Clear English Speaking agent. Its editable in-app schedule runs while your Mac is awake."

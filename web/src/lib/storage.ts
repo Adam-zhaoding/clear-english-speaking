@@ -70,9 +70,9 @@ export function exportLearningData() {
     "episode_id,sentence_id,difficulty,retest,updated_at",
     ...records.map((item) => [item.episodeId, item.sentenceId, item.difficulty || "", item.retest || "", item.updatedAt].map((value) => escape(String(value))).join(","))
   ].join("\r\n");
-  download("clear-english-records.json", JSON.stringify(records, null, 2), "application/json");
+  download("clear-english-speaking-records.json", JSON.stringify(records, null, 2), "application/json");
   // Excel on a Chinese Windows reads UTF-8 CSV correctly only with a BOM.
-  download("clear-english-records.csv", `${String.fromCharCode(0xFEFF)}${csv}`, "text/csv;charset=utf-8");
+  download("clear-english-speaking-records.csv", `${String.fromCharCode(0xFEFF)}${csv}`, "text/csv;charset=utf-8");
 }
 
 export const downloadBlob = (name: string, blob: Blob) => download(name, blob, blob.type || "application/octet-stream");

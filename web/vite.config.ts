@@ -12,8 +12,8 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Clear English",
-        short_name: "Clear English",
+        name: "Clear English Speaking",
+        short_name: "Clear English Speaking",
         description: "A private, local-first English listening practice player.",
         theme_color: "#f4f4eb",
         background_color: "#f4f4eb",

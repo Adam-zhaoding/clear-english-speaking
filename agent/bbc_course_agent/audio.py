@@ -1,6 +1,6 @@
 """Audio duration without external tools.
 
-A first-time user only installs Clear English. They do not have ffmpeg on
+A first-time user only installs Clear English Speaking. They do not have ffmpeg on
 PATH, so the course build must be able to measure an MP3 on its own. This
 module parses MPEG audio frame headers (and RIFF/WAVE headers) in pure
 Python; ``ffprobe`` is only consulted as an optional cross-check when the

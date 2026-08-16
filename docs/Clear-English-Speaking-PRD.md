@@ -1,4 +1,4 @@
-# Clear English 产品需求文档（PRD + 技术交接）
+# Clear English Speaking 产品需求文档（PRD + 技术交接）
 
 > 版本：0.3（小白可用性修复版）  
 > 更新日期：2026-08-15  
@@ -9,7 +9,7 @@
 
 ## 1. 一页结论
 
-Clear English 是一款 Windows 优先、PC 优先、完全本地优先的英语听力与口语练习播放器。它把 BBC Learning English 的 6 Minute English 单期素材，在用户电脑上转为可离线使用的课程包，再提供“盲听 → A/B/C 卡点 → 针对训练 → 原速回测”的训练闭环。
+Clear English Speaking 是一款 Windows 优先、PC 优先、完全本地优先的英语听力与口语练习播放器。它把 BBC Learning English 的 6 Minute English 单期素材，在用户电脑上转为可离线使用的课程包，再提供“盲听 → A/B/C 卡点 → 针对训练 → 原速回测”的训练闭环。
 
 首要目标不是做一个泛化的英语聊天机器人，也不是替用户给口音打分，而是让用户清楚知道：**哪一句没听出来、为什么没听出来、重新听后是否真正过关。**
 
@@ -89,7 +89,7 @@ Clear English 是一款 Windows 优先、PC 优先、完全本地优先的英语
 ```mermaid
 sequenceDiagram
   participant U as 用户
-  participant P as Clear English
+  participant P as Clear English Speaking
   participant W as WorkBuddy Desktop
   participant E as 本地课程引擎
 
@@ -222,11 +222,11 @@ sequenceDiagram
 
 | 数据 | 位置/实现 | 是否上传 |
 |---|---|---|
-| 原始课程 ZIP | `%LOCALAPPDATA%\ClearEnglish\engine\courses` | 否 |
-| 引擎设置 | `%LOCALAPPDATA%\ClearEnglish\engine\settings.json` | 否，且不含 Key 明文 |
-| API Key | Windows Credential Manager，服务名 `clear-english`、账户名 `clear-english-model-key` | 否 |
+| 原始课程 ZIP | `%LOCALAPPDATA%\EnglishSpeakingPlayer\engine\courses` | 否 |
+| 引擎设置 | `%LOCALAPPDATA%\EnglishSpeakingPlayer\engine\settings.json` | 否，且不含 Key 明文 |
+| API Key | Windows Credential Manager，服务名 `clear-english-speaking`、账户名 `clear-english-model-key` | 否 |
 | 已导入课程与练习记录 | WebView LocalStorage | 否 |
-| 课程 ZIP 副本 | IndexedDB `clear-english-player/course-archives` | 否 |
+| 课程 ZIP 副本 | IndexedDB `clear-english-speaking-player/course-archives` | 否 |
 | 可选用户录音 | 浏览器本地临时/下载路径 | 否，不自动评分 |
 
 备份建议：复制本地 `courses` 目录，并在播放器中导出学习记录 JSON/CSV；不要复制或共享系统凭据库。
@@ -293,8 +293,8 @@ flowchart LR
 `ProviderSetup.connect()` → `prepare_workbuddy` → 复制 `skills/bbc-course-pack-builder` 到 `.workbuddy/skills/` → 写入：
 
 ```text
-%LOCALAPPDATA%\ClearEnglish\workbuddy-workspace\
-└── .clear-english\jobs\<job-id>\
+%LOCALAPPDATA%\EnglishSpeakingPlayer\workbuddy-workspace\
+└── .clear-english-speaking\jobs\<job-id>\
     ├── task.json
     ├── SEND_THIS_TO_WORKBUDDY.txt
     └── output\lesson-draft.json   # WorkBuddy 唯一允许写入的结果
@@ -345,7 +345,7 @@ flowchart TD
 该 Skill 会由 `prepare_workbuddy` 从应用资源复制到：
 
 ```text
-%LOCALAPPDATA%\ClearEnglish\workbuddy-workspace\.workbuddy\skills\bbc-course-pack-builder\
+%LOCALAPPDATA%\EnglishSpeakingPlayer\workbuddy-workspace\.workbuddy\skills\bbc-course-pack-builder\
 ```
 
 WorkBuddy 需要在该工作区开启**新会话**，才能发现完整 Skill 目录。
@@ -414,10 +414,10 @@ BBC 部分页面明确说明文字并非逐字口述，而 Whisper 也会产生�
 
 | 领域 | 已完成内容 | 验证状态 |
 |---|---|---|
-| 桌面应用 | Windows `clear-english.exe` Tauri Release 可构建、启动 | 已构建并启动。 |
+| 桌面应用 | Windows `clear-english-speaking.exe` Tauri Release 可构建、启动 | 已构建并启动。 |
 | UI | 奶油白学习日记视觉、首页/训练/备课/复盘、左侧导航 | 已实现；人工截图验证。 |
 | PWA 缓存修复 | 桌面 WebView 不再复用旧 Service Worker 页面 | 已构建与启动验证。 |
-| 黑色控制台 | `where`、Codex、引擎调用采用 Windows 无窗口方式 | Clear English 自身轮询窗口已验证不再频繁弹出。 |
+| 黑色控制台 | `where`、Codex、引擎调用采用 Windows 无窗口方式 | Clear English Speaking 自身轮询窗口已验证不再频繁弹出。 |
 | WorkBuddy 发现 | 扫描常见目录与非系统盘 WorkBuddy 路径 | 已检测到实际安装的 WorkBuddy Desktop。 |
 | WorkBuddy 交接 | 专用工作区、Skill 复制、任务文件、剪贴板提示、新会话指引 | 已真实写入 WorkBuddy 草案。 |
 | BBC 兼容 | 唯一非 worksheet 官方 PDF 回退、MP3/PDF 发现 | 用 `ep-240912` 真实页面验证。 |
@@ -430,7 +430,7 @@ BBC 部分页面明确说明文字并非逐字口述，而 Whisper 也会产生�
 ### 9.2 已知工程限制
 
 - Windows GNU 工具链下，`cargo test` 的 Debug DLL 链接遇到 `export ordinal too large`；Release 构建可成功。不要据此声称 Rust 单元测试已通过。CI 中改用 MSVC runner 跑 `cargo test`。
-- GNU 工具链的 Windows 资源编译器不接受带空格的仓库路径；构建脚本依赖 `D:\ClearEnglish` 这类无空格 junction。
+- GNU 工具链的 Windows 资源编译器不接受带空格的仓库路径；构建脚本依赖 `D:\ClearEnglishSpeaking` 这类无空格 junction。
 - 真实 Whisper 对齐耗时约 2 分钟并占用 CPU；~~UI 缺少阶段进度~~ **已补上分阶段进度**，但仍**没有取消按钮**。
 - 首次备课需联网下载约 500 MB 语音模型；UI 会明确提示，但没有下载进度百分比。
 - ~~Tauri 任务状态来自草案文件是否存在~~ **已改为落盘状态机**。
@@ -576,7 +576,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-desktop.ps1 -NoBundle
 
 一个可对外发布的 Windows 版本至少应包含：
 
-- `Clear English.exe` 或明确安装器；双击可启动，无 Node/Python/终端前置条件。
+- `Clear English Speaking.exe` 或明确安装器；双击可启动，无 Node/Python/终端前置条件。
 - MIT License、隐私说明、BBC 来源与本地使用边界。
 - 合成演示课、课程包 Schema、错误码、WorkBuddy 使用说明。
 - 安装、模型配置、自动计划、备份、卸载、常见错误文档。
@@ -588,7 +588,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-desktop.ps1 -NoBundle
 ## 附录 A：当前真实样例
 
 - BBC 页面：`ep-240912`（Keeping kids off smartphones）。
-- 真实课程包：仅存在于本机 `%LOCALAPPDATA%\ClearEnglish\engine\courses\240912.zip`。
+- 真实课程包：仅存在于本机 `%LOCALAPPDATA%\EnglishSpeakingPlayer\engine\courses\240912.zip`。
 - 已验证内容：`audio.mp3`、`transcript.pdf`、`lesson.json`、`manifest.json`；6 条训练句。
 - 该文件不可提交到 GitHub，也不应附在公开 issue、PR 或演示文档中。
 
@@ -685,8 +685,8 @@ powershell -ExecutionPolicy Bypass -File scripts\build-desktop.ps1 -NoBundle
 
 ### C.6 学习数据契约
 
-- LocalStorage：`clear-english-courses`、`clear-english-records`。
-- IndexedDB：数据库 `clear-english-player`，object store `course-archives`。
+- LocalStorage：`clear-english-speaking-courses`、`clear-english-speaking-records`。
+- IndexedDB：数据库 `clear-english-speaking-player`，object store `course-archives`。
 - 记录至少含 `episodeId`、`sentenceId`、`difficulty`（A/B/C 或空）、`retest`、`updatedAt`；同一 episode + sentence 新记录覆盖旧记录。
 - CSV 导出列：`episode_id,sentence_id,difficulty,retest,updated_at`；课程升级的记录迁移规则尚未定义。
 

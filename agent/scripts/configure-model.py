@@ -12,7 +12,7 @@ from agent.bbc_course_agent.settings import load_settings, save_settings
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Configure a local OpenAI-compatible model for Clear English")
+    parser = argparse.ArgumentParser(description="Configure a local OpenAI-compatible model for Clear English Speaking")
     parser.add_argument("--base-url", required=True, help="Example: https://api.example.com/v1")
     parser.add_argument("--model", required=True, help="Model identifier supplied by your provider")
     args = parser.parse_args()
@@ -27,7 +27,7 @@ def main() -> int:
         return 1
     settings = load_settings()
     reference = settings["model"]["api_key_ref"]
-    keyring.set_password("clear-english", reference, secret)
+    keyring.set_password("clear-english-speaking", reference, secret)
     settings["model"].update({"base_url": args.base_url.rstrip("/"), "model": args.model})
     save_settings(settings)
     print("Model configuration saved. The API key was not written to settings.json.")

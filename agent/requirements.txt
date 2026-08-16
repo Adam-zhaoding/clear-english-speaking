@@ -1,5 +1,0 @@
-# Runtime uses the Python standard library by default.
-# Optional production extras:
-# faster-whisper>=1.1.0   # local word timestamps
-# keyring>=25.0.0         # OS credential store for model API keys
-# pyinstaller>=6.0.0      # GitHub Release packaging

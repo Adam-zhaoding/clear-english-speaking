@@ -419,6 +419,12 @@ def command_build(args: argparse.Namespace) -> None:
             **timing,
         })
 
+    # 按音频时间排序。选句顺序由 AI 决定，但练习要跟着音频走；
+    # 桌面版导入课程包时也要求句子升序不重叠，乱序会被判 invalid_sentence_timing。
+    sentences.sort(key=lambda row: row["start"])
+    for position, row in enumerate(sentences, start=1):
+        row["id"] = f"s{position}"
+
     # 句子层失败不让整集报废：凑不齐就退回只可收听
     mode = "full" if len(sentences) >= MIN_SENTENCES else "listen_only"
     if mode == "listen_only":

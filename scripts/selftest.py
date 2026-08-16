@@ -16,7 +16,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from make_lesson import NOTHING_NEW, already_built  # noqa: E402
+import make_lesson  # noqa: E402
+from make_lesson import NOTHING_NEW, already_built, find_unbuilt_episode  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "assets" / "player-template.html"
@@ -94,8 +95,49 @@ def check_schedule_guard() -> None:
           "the scheduled run greps for this exact marker; do not rename it")
 
 
+def check_never_repeats_a_lesson() -> None:
+    """Daily practice must reach into the archive, not stall on the newest week.
+
+    BBC publishes weekly and the list page carries hundreds of past episodes,
+    so a user practising every day should keep getting something they have not
+    done yet.
+    """
+    catalogue = [
+        ("260813", "https://example.invalid/ep-260813"),
+        ("260806", "https://example.invalid/ep-260806"),
+        ("260730", "https://example.invalid/ep-260730"),
+    ]
+    original = make_lesson.list_episodes
+    make_lesson.list_episodes = lambda: catalogue
+    try:
+        with tempfile.TemporaryDirectory() as raw:
+            courses = Path(raw)
+
+            url, exhausted = find_unbuilt_episode(courses)
+            check(exhausted is None and url.endswith("260813"),
+                  "an empty library must start from the newest episode")
+
+            (courses / "260813_a.html").write_text("x", encoding="utf-8")
+            url, exhausted = find_unbuilt_episode(courses)
+            check(exhausted is None and url.endswith("260806"),
+                  "the newest episode being done must fall through to the next one")
+
+            (courses / "260806_b.html").write_text("x", encoding="utf-8")
+            url, exhausted = find_unbuilt_episode(courses)
+            check(exhausted is None and url.endswith("260730"),
+                  "it must keep walking back through the archive")
+
+            (courses / "260730_c.html").write_text("x", encoding="utf-8")
+            url, exhausted = find_unbuilt_episode(courses)
+            check(exhausted is not None,
+                  "only a fully-practised catalogue may report nothing new")
+    finally:
+        make_lesson.list_episodes = original
+
+
 def main() -> int:
     check_schedule_guard()
+    check_never_repeats_a_lesson()
     check(TEMPLATE.exists(), f"missing template: {TEMPLATE}")
     if failures:
         print("\n".join(failures))
@@ -141,6 +183,24 @@ def main() -> int:
     # A stale instruction here is what used to send beginners to a terminal.
     check("http://localhost" not in page,
           "the page must not tell users to start a local server")
+
+    # Single sentences must not ride the <audio> playhead. Chrome seeks a VBR
+    # MP3 only to the nearest Xing index entry (~3.7s apart on a 6-minute
+    # episode); asking for 69.88s actually started at 68.86s, so the subtitle
+    # and the voice drifted apart. Sentences are cut out of decoded PCM instead.
+    check("decodeAudioData" in page and "createBufferSource" in page,
+          "single-sentence playback must come from decoded PCM, not audio.currentTime")
+    check("audio.currentTime = sentence" not in page and "seekTo(sentence" not in page,
+          "single-sentence playback must not seek the media element")
+
+    # The A/B/C labels above each sentence were noise on the page; they stay in
+    # the payload as authoring metadata but must not be rendered.
+    check("词不认识" not in page, "the A/B/C diagnosis labels must not be rendered")
+
+    # BBC audio is embedded here as a personal copy.
+    check("本内容仅供个人学习使用。" in page, "missing the personal-use notice")
+    check("对齐算法" not in page and "对齐模型" not in page,
+          "alignment internals must not be shown to the learner")
 
     if failures:
         print("selftest FAILED")

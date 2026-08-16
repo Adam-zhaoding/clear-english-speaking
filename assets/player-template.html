@@ -145,12 +145,6 @@
   @keyframes rise { from { opacity: 0; transform: translateY(9px); } }
   .card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 15px; }
   .card-no { color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }
-  .badge {
-    padding: 3px 11px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: .02em;
-  }
-  .badge-a { background: #f2e7dc; color: #8a5a1e; }
-  .badge-b { background: var(--sage); color: var(--moss); }
-  .badge-c { background: #e2e6f0; color: #3f4d73; }
   .card-time { margin-left: auto; color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; }
 
   .sentence { margin: 0 0 14px; font-size: 21px; line-height: 1.62; letter-spacing: -.005em; }
@@ -368,12 +362,22 @@
   /* ---------- 单句训练的会话状态 ----------
      每次启动分配一个递增 session；整集播放、变速、跳转、切换到别的句子
      都会作废当前 session，避免两个循环抢同一个播放头。            */
-  const shadow = { session: 0, active: null, timer: null, stop: null };
+  const shadow = { session: 0, active: null, timer: null, node: null };
+
+  /* 停掉正在响的单句节点。先摘掉 onended 再 stop，
+     否则 stop() 也会派发 ended，被当成「这一轮正常放完了」接着放下一轮。 */
+  const stopSpanNode = () => {
+    const node = shadow.node;
+    if (!node) return;
+    shadow.node = null;
+    node.onended = null;
+    try { node.stop(); } catch (_) {}
+  };
 
   const cancelShadow = (message, pause = true) => {
     shadow.session += 1;
     if (shadow.timer !== null) { clearTimeout(shadow.timer); shadow.timer = null; }
-    if (typeof shadow.stop === "function") { shadow.stop(); shadow.stop = null; }
+    stopSpanNode();
     const active = shadow.active;
     shadow.active = null;
     if (pause && !audio.paused) audio.pause();
@@ -384,21 +388,61 @@
     }
   };
 
-  /* seek 是异步的：设完 currentTime 立刻读，可能还是旧位置。
-     不等 seeked 就挂句尾监听，会被旧位置瞬间触发，三轮循环一秒跑完。 */
-  const seekTo = time => new Promise(resolve => {
-    if (Math.abs(audio.currentTime - time) < 0.04) { resolve(); return; }
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      audio.removeEventListener("seeked", finish);
-      resolve();
-    };
-    audio.addEventListener("seeked", finish);
-    audio.currentTime = time;
-    setTimeout(finish, 1500);          // 少数容器不派发 seeked，兜底放行
-  });
+  /* ---------- 单句音频：解码成 PCM 再按样点切 ----------
+     单句训练不能用 <audio> 的播放头。Chrome 对 VBR MP3 只按 Xing 索引
+     seek，格子约 3.7 秒宽：实测请求 69.88s，实际从 68.86s 开始出声——
+     整句前移一秒，字幕和声音就对不上了，句子越短越离谱。
+     所以这里把整集解码成 PCM，按样点切出每一句，用 AudioBufferSourceNode
+     播。样点级精确，循环多少轮都不会越走越偏。
+     切完就丢掉整集那份大 buffer，只留 5 句的小段。                 */
+  let audioCtx = null;
+  let spanBuffers = null;
+  let spanPending = null;
+
+  const ensureAudioContext = () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // 预热时还没有用户手势，resume 会被拒；等真正点播放那次再恢复就行
+    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+    return audioCtx;
+  };
+
+  const readAudioBytes = async () => {
+    const source = audio.getAttribute("src") || "";
+    if (source.slice(0, 5) === "data:") {
+      // 内嵌音频是 base64，自己解比 fetch(data:) 稳：file:// 下并非每个浏览器都放行
+      const binary = atob(source.slice(source.indexOf(",") + 1));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      return bytes.buffer;
+    }
+    return (await fetch(source)).arrayBuffer();
+  };
+
+  const sliceSpan = (whole, start, end) => {
+    const rate = whole.sampleRate;
+    const from = clamp(Math.round(start * rate), 0, whole.length);
+    const to = clamp(Math.round(end * rate), from + 1, whole.length);
+    const span = audioCtx.createBuffer(whole.numberOfChannels, to - from, rate);
+    for (let channel = 0; channel < whole.numberOfChannels; channel += 1) {
+      span.copyToChannel(whole.getChannelData(channel).subarray(from, to), channel);
+    }
+    return span;
+  };
+
+  const ensureSpans = () => {
+    if (spanBuffers) return Promise.resolve(spanBuffers);
+    if (spanPending) return spanPending;
+    ensureAudioContext();
+    spanPending = readAudioBytes()
+      .then(bytes => audioCtx.decodeAudioData(bytes))
+      .then(whole => {
+        spanBuffers = sentences.map(item => sliceSpan(whole, item.start, item.end));
+        spanPending = null;
+        return spanBuffers;     // whole 到此没人引用，几十兆 PCM 交给 GC
+      })
+      .catch(error => { spanPending = null; throw error; });
+    return spanPending;
+  };
 
   /* ---------- 整集播放 ---------- */
   const playButton = document.getElementById("play");
@@ -477,35 +521,6 @@
     renderListenStatus("速度已调整");
   });
 
-  /* ---------- 句尾判定：双保险 ----------
-     rAF 逐帧判定最准，但页面切到后台会被浏览器暂停；
-     timeupdate 在后台仍然工作，但间隔约 250ms。
-     两者同时挂上，谁先到谁生效，再加一道硬超时兜底。     */
-  const watchUntil = (endTime, onDone) => {
-    let settled = false;
-    let frameId = null;
-    let guardId = null;
-    const finish = reason => {
-      if (settled) return;
-      settled = true;
-      if (frameId !== null) cancelAnimationFrame(frameId);
-      if (guardId !== null) clearTimeout(guardId);
-      audio.removeEventListener("timeupdate", onTick);
-      onDone(reason);
-    };
-    function onTick() { if (audio.currentTime >= endTime) finish("timeupdate"); }
-    const onFrame = () => {
-      if (settled) return;
-      if (audio.currentTime >= endTime) { finish("raf"); return; }
-      frameId = requestAnimationFrame(onFrame);
-    };
-    audio.addEventListener("timeupdate", onTick);
-    frameId = requestAnimationFrame(onFrame);
-    const remaining = (endTime - audio.currentTime) * 1000 / Math.max(audio.playbackRate, .1);
-    guardId = setTimeout(() => finish("guard"), Math.max(remaining, 0) + 1200);
-    return () => finish("cancelled");
-  };
-
   /* ---------- 麦克风：整个页面只申请一次 ----------
      每句都调 getUserMedia 会让浏览器反复弹授权框（file:// 下尤其明显，
      它不跨页面持久化权限）。这里把 MediaStream 提到页面级持有：
@@ -556,12 +571,6 @@
     if (!card) return;
     card.toggle.textContent = playing ? "❚❚ 暂停" : "▶ 播放 / 继续";
     card.toggle.setAttribute("aria-pressed", String(playing));
-  };
-
-  const BADGES = {
-    A: ["badge-a", "A 词不认识"],
-    B: ["badge-b", "B 认识但没听出来"],
-    C: ["badge-c", "C 听出来但没懂"]
   };
 
   const buildSentenceText = (container, text, glossary) => {
@@ -624,14 +633,6 @@
     number.className = "card-no";
     number.textContent = "第 " + (index + 1) + " 句 / 共 " + sentences.length;
     top.append(number);
-    (sentence.diagnosis_tags || []).forEach(tag => {
-      const config = BADGES[String(tag).toUpperCase()];
-      if (!config) return;
-      const badge = document.createElement("span");
-      badge.className = "badge " + config[0];
-      badge.textContent = config[1];
-      top.append(badge);
-    });
     const time = document.createElement("span");
     time.className = "card-time";
     time.textContent = formatTime(sentence.start) + " → " + formatTime(sentence.end);
@@ -726,59 +727,83 @@
 
     /* --- 单句播放逻辑 --- */
     const playSentence = async times => {
-      cancelShadow("", false);
+      cancelShadow("", true);            // 单句和整集不能同时响
       const session = ++shadow.session;
       const total = Math.max(1, Number(times) || 1);
-      shadow.active = { index, session, done: 0, total };
-      audio.playbackRate = Number(speed.value) || 1;
+      const state = { index, session, done: 0, total, offset: 0,
+                      rate: Number(speed.value) || 1, startedAt: 0 };
+      shadow.active = state;
 
-      const runRound = async () => {
-        if (!shadow.active || shadow.active.session !== session) return;
-        await seekTo(sentence.start);
-        if (!shadow.active || shadow.active.session !== session) return;
-        if (audio.currentTime >= sentence.end - 0.05) {
-          cancelShadow("跳转没成功，请再点一次", true);
-          return;
-        }
-        try { await audio.play(); } catch (_) {
-          cancelShadow("浏览器拦下了播放，请再点一次", true);
-          return;
-        }
-        if (!shadow.active || shadow.active.session !== session) return;
-        setCardPlaying(index, true);
-        setCardStatus(index, "正在播放 " + (shadow.active.done + 1) + " / " + total + " 轮");
+      let spans;
+      try {
+        if (!spanBuffers) setCardStatus(index, "正在准备单句音频，第一次要几秒…");
+        spans = await ensureSpans();
+      } catch (error) {
+        cancelShadow("单句音频准备失败（" + ((error && error.name) || "解码失败") +
+                     "），整集播放不受影响", false);
+        return;
+      }
+      if (shadow.active !== state) return;      // 等解码这几秒里用户可能已经点了别处
 
-        shadow.stop = watchUntil(sentence.end, reason => {
-          shadow.stop = null;
-          if (!shadow.active || shadow.active.session !== session) return;
-          if (reason === "cancelled") return;
-          audio.pause();
+      const buffer = spans[index];
+      if (!buffer) { cancelShadow("这一句没有可播放的音频", false); return; }
+
+      // 从 buffer 里的 offset 秒接着放；播完一轮由 onended 推进
+      state.resume = offset => {
+        if (shadow.active !== state) return;
+        const ctx = ensureAudioContext();
+        state.offset = offset >= buffer.duration - 0.02 ? 0 : Math.max(0, offset);
+        state.startedAt = ctx.currentTime;
+        const node = ctx.createBufferSource();
+        node.buffer = buffer;
+        node.playbackRate.value = state.rate;
+        node.connect(ctx.destination);
+        node.onended = () => {
+          shadow.node = null;
+          if (shadow.active !== state) return;
           setCardPlaying(index, false);
-          shadow.active.done += 1;
-          if (shadow.active.done >= total) {
+          state.done += 1;
+          if (state.done >= total) {
             setCardStatus(index, "已完成 " + total + " 轮，换一句或再来一遍");
             cancelShadow("", false);
             return;
           }
-          setCardStatus(index, "第 " + shadow.active.done + " 轮结束，跟读一遍，马上再放");
+          setCardStatus(index, "第 " + state.done + " 轮结束，跟读一遍，马上再放");
           // 这 800ms 是留给你开口跟读的，不是延迟
-          shadow.timer = setTimeout(() => { shadow.timer = null; runRound(); }, 800);
-        });
+          shadow.timer = setTimeout(() => {
+            shadow.timer = null;
+            state.resume(0);
+          }, 800);
+        };
+        node.start(0, state.offset);
+        shadow.node = node;
+        setCardPlaying(index, true);
+        setCardStatus(index, "正在播放 " + (state.done + 1) + " / " + total + " 轮");
       };
-      await runRound();
+
+      state.resume(0);
+    };
+
+    // 暂停时把「已经放了多久」折算回 buffer 里的位置，恢复时从那儿接着放
+    const parkSpan = state => {
+      const ctx = ensureAudioContext();
+      state.offset += (ctx.currentTime - state.startedAt) * state.rate;
+      stopSpanNode();
     };
 
     once.addEventListener("click", () => playSentence(1));
     loop.addEventListener("click", () => playSentence(Number(loopCount.value)));
     stop.addEventListener("click", () => cancelShadow("已停止", true));
-    toggle.addEventListener("click", async () => {
-      if (shadow.active && shadow.active.index === index && !audio.paused) {
-        audio.pause();
+    toggle.addEventListener("click", () => {
+      const state = shadow.active;
+      if (state && state.index === index && shadow.node) {
+        parkSpan(state);
         setCardPlaying(index, false);
+        setCardStatus(index, "已暂停，点「播放 / 继续」接着放");
         return;
       }
-      if (shadow.active && shadow.active.index === index && audio.paused) {
-        try { await audio.play(); setCardPlaying(index, true); } catch (_) {}
+      if (state && state.index === index && typeof state.resume === "function") {
+        state.resume(state.offset);
         return;
       }
       playSentence(Number(loopCount.value));
@@ -794,7 +819,18 @@
       showTranslation.classList.toggle("is-on", !translation.hidden);
     });
     speed.addEventListener("change", () => {
-      if (shadow.active && shadow.active.index === index) audio.playbackRate = Number(speed.value);
+      const state = shadow.active;
+      if (state && state.index === index) {
+        // 变速要先结清已经放过的时长，否则恢复位置会按新速度重算，越调越偏
+        if (shadow.node) {
+          const ctx = ensureAudioContext();
+          state.offset += (ctx.currentTime - state.startedAt) * state.rate;
+          state.startedAt = ctx.currentTime;
+          shadow.node.playbackRate.value = Number(speed.value) || 1;
+        }
+        state.rate = Number(speed.value) || 1;
+        return;
+      }
       setCardStatus(index, speed.value + "× · 循环 " + loopCount.value + " 次");
     });
     loopCount.addEventListener("change", () => {
@@ -846,7 +882,7 @@
       recStop.disabled = true;
     });
     recPlay.addEventListener("click", () => {
-      if (!audio.paused) { audio.pause(); cancelShadow("", false); }
+      cancelShadow("", true);            // 回听的时候别让原句还在响
       recPlayer.play().catch(() => { recStatus.textContent = "回听失败，重新录一次。"; });
     });
   };
@@ -916,8 +952,6 @@
     ["期次", episode.id || "—"],
     ["官方页面", episode.bbc_page_url || ""],
     ["官方 Transcript", episode.transcript_pdf_url || ""],
-    ["对齐算法", (lesson.shadow && lesson.shadow.algorithm_version) || "—"],
-    ["对齐模型", (lesson.shadow && lesson.shadow.model_name) || "—"],
     ["生成时间", lesson.generated_at || "—"]
   ];
   rows.forEach(([label, value]) => {
@@ -939,6 +973,17 @@
     }
     about.append(line);
   });
+
+  const usage = document.createElement("p");
+  usage.style.cssText = "margin:14px 0 0;color:var(--ink-faint);font-size:13px";
+  usage.textContent = "本内容仅供个人学习使用。";
+  about.append(usage);
+
+  // 解码整集要一两秒。趁用户还在读页面就先做掉，第一次点「播放原句」才不用等。
+  // 失败不提示：真正点下去的时候还会再试一次，那时才有必要说话。
+  if (sentences.length) {
+    setTimeout(() => { ensureSpans().catch(() => {}); }, 400);
+  }
 
   // 页面被切走时停下单句循环，避免音频在后台跑飞
   document.addEventListener("visibilitychange", () => {

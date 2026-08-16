@@ -109,16 +109,44 @@ def already_built(courses_dir: Path, episode_id: str) -> Path | None:
     return next(iter(sorted(courses_dir.glob(f"{episode_id}_*.html"))), None)
 
 
-def find_latest_episode() -> str:
+def list_episodes() -> list[tuple[str, str]]:
+    """列表页上的期次，新的在前。返回 (期次号, 页面地址)，同一期只保留一次。"""
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(http_get(LIST_URL), "html.parser")
+    found: list[tuple[str, str]] = []
+    seen: set[str] = set()
     for anchor in soup.select("a[href]"):
         href = anchor["href"]
-        if "6-minute-english" in href and re.search(r"ep-?\d{6}", href):
-            return urljoin(LIST_URL, href)
-    raise PipelineError("no_eligible_episode",
-                        "在列表页上找不到期次链接，BBC 页面结构可能变了；改用 --url 指定一期。")
+        if "6-minute-english" not in href:
+            continue
+        match = re.search(r"ep-?(\d{6})", href)
+        if not match or match.group(1) in seen:
+            continue
+        seen.add(match.group(1))
+        found.append((match.group(1), urljoin(LIST_URL, href)))
+    if not found:
+        raise PipelineError("no_eligible_episode",
+                            "在列表页上找不到期次链接，BBC 页面结构可能变了；改用 --url 指定一期。")
+    return found
+
+
+def find_latest_episode() -> str:
+    return list_episodes()[0][1]
+
+
+def find_unbuilt_episode(courses_dir: Path) -> tuple[str, Path | None]:
+    """挑列表上第一期还没备过的。全都备过时返回 (最新一期地址, 它的成品路径)。
+
+    用户每天练，BBC 每周才更新一期。只认最新一期的话，一周里有六天拿不到东西；
+    往前找一期没练过的，才是这个工具该有的行为。
+    """
+    episodes = list_episodes()
+    for episode_id, url in episodes:
+        if already_built(courses_dir, episode_id) is None:
+            return url, None
+    newest_id, newest_url = episodes[0]
+    return newest_url, already_built(courses_dir, newest_id)
 
 
 def pick_transcript(candidates: list[str]) -> str:
@@ -337,16 +365,26 @@ def command_prepare(args: argparse.Namespace) -> None:
     workspace.mkdir(parents=True, exist_ok=True)
 
     log("第一步 · 备课准备")
-    page_url = args.url or find_latest_episode()
+    # 不给 --courses 也照查默认课程目录，免得漏给参数就退化成每天重备。
+    courses_dir = Path(args.courses).resolve() if args.courses else default_courses_dir()
+
+    if args.url:
+        page_url = args.url
+    else:
+        # 用户每天练，BBC 每周才更新一期。只盯最新一期的话，一周里有六天
+        # 拿不到新东西，所以往前找第一期还没备过的。
+        page_url, exhausted = find_unbuilt_episode(courses_dir)
+        if exhausted is not None:
+            log(f"  列表上的期次都已经备过了，最近一期：{exhausted.name}")
+            log(f"{NOTHING_NEW}")
+            return
     log(f"  期次页面：{page_url}")
 
     episode = parse_episode(page_url)
     log(f"  标题：{episode.title}（{episode.episode_id}）")
 
-    # 定时备课每天都会醒来，BBC 却是每周更新一期。在下载 7MB 音频、
-    # 跑一分钟 Whisper 之前先看一眼这期是不是已经备过了。
-    # 不给 --courses 也照查默认课程目录，免得漏给参数就退化成每天重备。
-    courses_dir = Path(args.courses).resolve() if args.courses else default_courses_dir()
+    # --url 指定的一期也要挡一道，免得手动重跑时又备一遍同样的内容。
+    # 挡在下载 7MB 音频、跑一分钟 Whisper 之前。
     built = already_built(courses_dir, episode.episode_id)
     if built:
         log(f"  这一期已经备过了：{built.name}")

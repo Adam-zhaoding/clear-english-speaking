@@ -12,16 +12,25 @@
 
 > 帮我装一个英语学习技能，然后给我备今天的课。
 >
-> 1. 把 `https://github.com/Adam-zhaoding/clear-english-speaking` 这个仓库下载到本地
-> 2. 打开里面的 `SKILL.md`，完全按它写的流程做
-> 3. 如果提示缺 Python 依赖，先执行 `pip install requests beautifulsoup4 pypdf faster-whisper`
-> 4. 全部做完之后，把生成的 HTML 文件的完整路径告诉我
+> 1. 把 `https://github.com/Adam-zhaoding/clear-english-speaking` 装到我电脑上，
+>    位置你自己定一个固定的地方，以后每次都用同一个位置，不要重复下载。
+>    记住这个位置，以后我说「备今天的英语课」你直接用它，不用我再给地址。
+> 2. 打开里面的 `SKILL.md`，完全按它写的流程做到底。
+> 3. 缺什么依赖你自己装，装完继续，不用回来问我。
+> 4. 课程存到哪、工作目录放哪，都按 `SKILL.md` 的默认规则来，不要问我要路径。
+> 5. 中间不要停下来等我确认。只有真的需要我在屏幕上点一下（比如授权文件夹），
+>    才停下来，并且明确告诉我点哪个按钮。
+> 6. 全部做完，把生成的 HTML 完整路径发我，附一句这期讲什么、你挑了哪几句、
+>    每句的中文意思和难在哪。
 >
-> 我不写代码，需要我配合的地方请一步一步告诉我该点哪里。
+> 我完全不写代码，看不懂报错。任何失败都用大白话告诉我卡在哪、我要不要管。
+> 第一次跑可能要下载语音模型，会慢几分钟，这是正常的，别中断。
 
-WorkBuddy 会自己完成：找最新一期 → 下载官方音频和 Transcript → 本地转写对齐 →
-挑句子写翻译 → 生成练习页。全程大约 2–3 分钟，其中 1 分钟是本地语音对齐在跑。
+WorkBuddy 会自己完成：装技能 → 找最新一期 → 下载官方音频和 Transcript → 本地转写对齐 →
+挑句子写翻译 → 生成练习页。全程大约 2–3 分钟，其中 1 分钟是本地语音对齐在跑；
+**第一次**还要下载 Whisper 模型，会再多几分钟。
 
+课程默认存到你的**「文档 / ClearEnglish」**文件夹，你不用指定路径。
 做完你会拿到一个像 `260813_who-does-the-housework.html` 的文件，双击打开就能练。
 
 ---
@@ -32,15 +41,22 @@ WorkBuddy 会自己完成：找最新一期 → 下载官方音频和 Transcript
 
 > 用 clear-english-speaking 技能备一节新的 BBC 6 Minute English。
 >
-> 课程统一放在 `D:\课程\ClearEnglish`（这个目录固定不变）。
-> 先跑 `prepare` 并带上 `--courses` 指向这个目录；如果输出里有 `NOTHING_NEW`，
-> 说明最新一期已经备过了，回我一句「今天没有新一期」就结束，不要重复备课。
+> 技能和课程目录都用上次已经建好的那一个，不要另建、不要换位置。
 >
-> 有新一期就走完整流程，做好之后把 HTML 的完整路径发给我，
-> 附一句这期讲什么、你挑了哪几句。
+> 先跑 `prepare` 检查有没有新一期：
+> - 输出里出现 `NOTHING_NEW`，说明最新一期已经备过，回我一句
+>   「今天没有新一期，最近一期已备过」就结束，不要重复备课，不要换别的期次硬凑。
+> - 有新一期，就按 `SKILL.md` 走完整流程做出来。
+>
+> 现在没人在旁边，全程别提问、别等确认，一个人走完。
+>
+> 做完推给我：这期讲什么、音频多长；挑的 3-5 句（英文原句 + 中文翻译 + 卡点是
+> A 词不认识 / B 没听出来 / C 没听懂）；HTML 的完整路径。
+>
+> 失败了也要推给我，说清楚卡在哪一步、我需不需要做什么。不要自己反复重试。
 
-把里面的目录换成你自己的路径。**这个目录一定要固定**——技能靠它记住哪些期次已经备过，
-换目录就等于失忆，会把同一期反复备一遍。
+不用填任何路径。课程固定落在「文档 / ClearEnglish」，技能靠这个固定目录记住
+哪些期次已经备过——所以别手工挪走生成的 HTML，挪走就等于失忆，会把同一期再备一遍。
 
 BBC 每周更新一期，所以每天触发的任务里大部分天会直接回「今天没有新一期」。
 这一步很快，只抓一下期次页就结束，不会下载音频、不会跑语音识别。
@@ -66,19 +82,25 @@ BBC 每周更新一期，所以每天触发的任务里大部分天会直接回�
 |---|---|
 | `SKILL.md` | WorkBuddy 读的说明书。它按这个流程干活 |
 | `scripts/make_lesson.py` | 备课流水线：下载、抽正文、对齐、校验、渲染 |
+| `scripts/selftest.py` | 装完跑一次，确认环境没问题 |
 | `assets/player-template.html` | 练习页模板 |
 
 ## 手动跑（给愿意开终端的人）
 
 ```bash
-pip install requests beautifulsoup4 pypdf faster-whisper
+python -m pip install requests beautifulsoup4 pypdf faster-whisper
 
 cd scripts
+python selftest.py
 python make_lesson.py prepare --workspace lesson-work
 # 这一步之后，让 AI 读 lesson-work/draft-request.json，
 # 挑 3-5 句写成 lesson-work/draft.json（格式见 SKILL.md）
-python make_lesson.py build --workspace lesson-work --output ../courses
+python make_lesson.py build --workspace lesson-work
 ```
+
+课程默认落在「文档 / ClearEnglish」，`prepare` 也会拿它做重复检查。
+想换地方就给 `build --output <目录>`，但记得 `prepare --courses` 要指向同一个，
+否则去重会失效。
 
 想指定某一期，给 prepare 加 `--url <BBC 期次页地址>`。
 对齐不够准，把 `--model base.en` 换成 `--model small.en` 重跑。

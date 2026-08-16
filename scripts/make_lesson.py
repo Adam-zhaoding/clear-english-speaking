@@ -51,6 +51,20 @@ MIN_SENTENCE_SECONDS = 2.0
 MAX_SENTENCE_SECONDS = 20.0
 
 
+def default_courses_dir() -> Path:
+    """课程默认落在用户「文档」目录下，Agent 不必向用户要路径。
+
+    这个固定位置同时是定时备课的去重依据：每天醒来先扫这里，看最新一期
+    是不是已经备过。换目录就等于失忆，会把同一期反复备一遍。
+    """
+    home = Path.home()
+    for relative in ("Documents", "文档", "OneDrive/Documents", "OneDrive/文档"):
+        candidate = home / relative
+        if candidate.is_dir():
+            return candidate / "ClearEnglish"
+    return home / "ClearEnglish"
+
+
 class PipelineError(Exception):
     """带失败码的中止，便于 Agent 按码给出修复动作。"""
 
@@ -331,12 +345,13 @@ def command_prepare(args: argparse.Namespace) -> None:
 
     # 定时备课每天都会醒来，BBC 却是每周更新一期。在下载 7MB 音频、
     # 跑一分钟 Whisper 之前先看一眼这期是不是已经备过了。
-    if args.courses:
-        built = already_built(Path(args.courses).resolve(), episode.episode_id)
-        if built:
-            log(f"  这一期已经备过了：{built.name}")
-            log(f"{NOTHING_NEW} {episode.episode_id}")
-            return
+    # 不给 --courses 也照查默认课程目录，免得漏给参数就退化成每天重备。
+    courses_dir = Path(args.courses).resolve() if args.courses else default_courses_dir()
+    built = already_built(courses_dir, episode.episode_id)
+    if built:
+        log(f"  这一期已经备过了：{built.name}")
+        log(f"{NOTHING_NEW} {episode.episode_id}")
+        return
 
     audio_path = workspace / f"{episode.episode_id}.mp3"
     pdf_path = workspace / f"{episode.episode_id}.pdf"
@@ -468,7 +483,7 @@ def command_build(args: argparse.Namespace) -> None:
 
     slug = re.sub(r"[^a-z0-9]+", "-", request["episode"]["title"].lower()).strip("-")[:48]
     stem = f"{request['episode']['id']}_{slug or 'lesson'}"
-    output_dir = Path(args.output).resolve() if args.output else workspace
+    output_dir = Path(args.output).resolve() if args.output else default_courses_dir()
     output_dir.mkdir(parents=True, exist_ok=True)
 
     (output_dir / f"{stem}.lesson.json").write_text(
@@ -492,13 +507,15 @@ def main() -> None:
     prepare.add_argument("--latest", action="store_true", help="取最新一期（默认行为）")
     prepare.add_argument("--workspace", default="lesson-work", help="工作目录")
     prepare.add_argument("--model", default="base.en", help="Whisper 模型，精度不够可换 small.en")
-    prepare.add_argument("--courses", help="课程输出目录。给了就先查这一期是否已备过，"
-                                           f"备过则打印 {NOTHING_NEW} 并直接结束（定时备课用）")
+    prepare.add_argument("--courses", help="课程输出目录，默认「文档 / ClearEnglish」。"
+                                           "开跑前先查这一期是否已备过，"
+                                           f"备过则打印 {NOTHING_NEW} 并直接结束")
     prepare.set_defaults(handler=command_prepare)
 
     build = sub.add_parser("build", help="校验草案并渲染成单文件 HTML")
     build.add_argument("--workspace", default="lesson-work", help="工作目录")
-    build.add_argument("--output", help="课程输出目录，默认与工作目录相同")
+    build.add_argument("--output", help="课程输出目录，默认「文档 / ClearEnglish」；"
+                                        "只有用户主动要求换地方时才给")
     build.add_argument("--no-embed", action="store_true", help="不内嵌音频，改用官方远程地址（文件小但要联网）")
     build.add_argument("--now", help="写进课程的生成时间")
     build.set_defaults(handler=command_build)

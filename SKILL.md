@@ -21,6 +21,24 @@ description: 用 BBC Learning English 6 Minute English 的官方素材，生成�
 
 ## 流程
 
+### 第零步：技能装在哪（每次开工前先确认，不要问用户）
+
+技能固定放在**用户主目录下的 `clear-english-speaking`**。位置是固定的，
+这样明天的定时任务、下个月的手动备课，找的都是同一份。
+
+- 已经存在：直接用，**不要重新下载**。可以先 `git pull`，失败就用现有版本继续，不要因此中止。
+- 不存在：`git clone https://github.com/Adam-zhaoding/clear-english-speaking` 到用户主目录；
+  机器上没有 git 就下载仓库 ZIP，解压到同一位置。
+
+首次装好后跑一次自检，通过再往下走：
+
+```bash
+python scripts/selftest.py
+```
+
+**课程输出目录不要问用户。** 脚本默认写到用户的「文档 / ClearEnglish」，
+自动建好。只有用户主动要求换地方时，才给 `--output`。
+
 ### 第一步：准备
 
 ```bash
@@ -33,10 +51,13 @@ python make_lesson.py prepare --workspace lesson-work
 这一步会下载素材并跑本地 Whisper（一集 6 分钟的节目约需 1 分钟），
 产出 `lesson-work/draft-request.json`。
 
-首次运行如果报缺依赖：
+**首次运行会额外下载 Whisper 模型**（几十到上百 MB），可能多花几分钟，属正常，
+不要当成卡死中断掉。提前告诉用户一声，然后耐心等。
+
+缺依赖时自己装完继续，不用回头问用户：
 
 ```bash
-pip install requests beautifulsoup4 pypdf faster-whisper
+python -m pip install requests beautifulsoup4 pypdf faster-whisper
 ```
 
 ### 第二步：你来选句（这是你唯一的创作工作）
@@ -84,8 +105,11 @@ pip install requests beautifulsoup4 pypdf faster-whisper
 ### 第三步：渲染
 
 ```bash
-python make_lesson.py build --workspace lesson-work --output "课程输出目录"
+python make_lesson.py build --workspace lesson-work
 ```
+
+课程写到「文档 / ClearEnglish」，目录不存在会自动建。不要向用户要路径，
+也不要临时换地方——定时备课的重复防护靠的就是这个固定目录。
 
 产出两个文件：
 
@@ -104,18 +128,18 @@ python make_lesson.py build --workspace lesson-work --output "课程输出目录
 ## 定时自动备课
 
 用户可以在 WorkBuddy 里建一个定时任务，让你每天自动备一节课。**定时任务触发时没有人在
-旁边**，所以整条流程你要一个人走完，不要中途提问、不要等确认。
+旁边**，所以整条流程你要一个人走完，不要中途提问、不要等确认，更不要向用户要路径。
 
-固定用同一个课程目录（下面用 `<课程目录>` 指代，第一次建好之后就不要再换），
-否则重复防护认不出哪些期次已经备过。
+技能位置和课程目录都用默认的那一份（第零步已经规定死了），别另建、别换地方——
+换目录就等于失忆，重复防护认不出哪些期次已经备过。
 
 ### 第一步：先看有没有新一期
 
 ```bash
-python make_lesson.py prepare --workspace lesson-work --courses "<课程目录>"
+python make_lesson.py prepare --workspace lesson-work
 ```
 
-`--courses` 会让脚本在下载音频、跑 Whisper **之前**先比对期次号。
+脚本会在下载音频、跑 Whisper **之前**先拿默认课程目录里的成品比对期次号。
 
 如果输出里出现 `NOTHING_NEW`，说明最新一期已经备过了。**就此停下**：
 不要重复备课，不要改用别的期次硬凑一节。按用户设定的方式回一句
@@ -126,7 +150,7 @@ BBC 6 Minute English 每周更新一期，所以每天触发的任务里，大�
 ### 第二步：选句和渲染，跟手动流程完全一样
 
 有新一期时，照第二步、第三步做：读 `draft-request.json` 挑 3–5 句，写 `draft.json`，
-然后 build 到同一个 `<课程目录>`。
+然后 build。输出目录不用给，脚本自己落到同一个默认课程目录。
 
 无人值守不降低选句标准。宁可只挑 3 句好的，也不要为了凑满 5 句放进一句平淡的过渡语。
 

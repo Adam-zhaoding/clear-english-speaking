@@ -453,7 +453,8 @@ def command_build(args: argparse.Namespace) -> None:
     size = html.stat().st_size / 1024 / 1024
     log(f"\n课程已生成 → {html}")
     log(f"  模式 {mode} · {len(sentences)} 句训练 · {size:.1f} MB")
-    log("  双击这个文件就能开始练。想要页内录音，改用 http://localhost 打开它。")
+    log("  双击这个文件就能开始练：播放、变速、循环、跟读、录音全都可用。")
+    log("  第一次点录音时浏览器会问一次麦克风权限，允许一次即可，之后每句都不再打断。")
 
 
 # --------------------------------------------------------------------------- CLI

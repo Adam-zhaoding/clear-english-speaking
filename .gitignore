@@ -19,10 +19,12 @@ venv/
 
 # 课程产物：内嵌了 BBC 官方音频，属于用户本机的个人副本，
 # 不上传、不提交、不分享（见 skill/SKILL.md「边界」）
+# 命名规则是 <6 位期次>_<标题 slug>.html，例如 260813_who-does-the-housework.html
 *.lesson.json
 lesson-work/
 courses/
-*_6_minute_english*.html
+[0-9][0-9][0-9][0-9][0-9][0-9]_*.html
+*.mp3
 
 # 探针的本机测试产物（含内嵌音频与本机路径）
 probe/runtime-probe.html

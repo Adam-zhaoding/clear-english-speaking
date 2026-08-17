@@ -47,6 +47,8 @@ def render() -> str:
             "bbc_page_url": "https://www.bbc.co.uk/learningenglish/",
             "transcript_pdf_url": "https://downloads.bbc.co.uk/learningenglish/x.pdf",
         },
+        "transcript_text": "Neil Self test sentence number 1. Beth "
+                           "Self test sentence number 2. Self test sentence number 3.",
         "shadow": {
             "algorithm_version": "selftest",
             "model_name": "none",
@@ -135,9 +137,61 @@ def check_never_repeats_a_lesson() -> None:
         make_lesson.list_episodes = original
 
 
+def check_alignment_is_computed_once() -> None:
+    """Aligning is the slow step. Doing it in prepare and again in build is
+    forty seconds of pure waiting per lesson, so build reads a cache."""
+    with tempfile.TemporaryDirectory() as raw:
+        workspace = Path(raw)
+        alignment = make_lesson.Alignment(
+            [make_lesson.Word("hello", 0.0, 0.4, 0.91),
+             make_lesson.Word("world", 0.42, 0.9, 0.83)],
+            "base.en", 1.0)
+        path = make_lesson.alignment_path(workspace, "260813")
+        make_lesson.save_alignment(path, alignment, "audio-sha")
+
+        again = make_lesson.load_alignment(path, "audio-sha")
+        check(again is not None and [w.text for w in again.words] == ["hello", "world"],
+              "a cached alignment must come back word for word")
+        check(again is not None and abs(again.words[1].end - 0.9) < 1e-6,
+              "cached timestamps must survive the round trip")
+        check(again is not None and abs(again.duration - 1.0) < 1e-6,
+              "cached audio duration must survive the round trip")
+
+        # Wrong audio, corrupt file, no file: all mean "align again", never
+        # "cut sentences with somebody else's timestamps".
+        check(make_lesson.load_alignment(path, "another-audio") is None,
+              "a cache built from other audio must be refused")
+        path.write_text("{ not json", encoding="utf-8")
+        check(make_lesson.load_alignment(path, "audio-sha") is None,
+              "a corrupt cache must fall back to re-aligning, not raise")
+        check(make_lesson.load_alignment(workspace / "absent.json", "audio-sha") is None,
+              "a missing cache must simply mean no cache")
+
+
+def check_page_footers_leave_the_transcript() -> None:
+    """BBC stamps a footer onto every page of the PDF. Left in, it lands in the
+    middle of the prose and cuts any sentence that spans a page break — and a
+    cut sentence is no longer a substring, so it can never be picked."""
+    raw = ("Pippa And that is why the chore\n"
+           "6 Minute English ©British Broadcasting Corporation 2026 "
+           "bbclearningenglish.com Page 2 of 5\n"
+           "nobody wants is still waiting.")
+    cleaned = make_lesson.normalize(
+        make_lesson.PAGE_FOOTER.sub(" ", make_lesson.unify(raw)))
+    check("©" not in cleaned and "Page 2 of 5" not in cleaned,
+          f"the page footer must not survive into the transcript: {cleaned!r}")
+    check("And that is why the chore nobody wants is still waiting." in cleaned,
+          f"a sentence split by a page break must be rejoined: {cleaned!r}")
+
+    check(len(make_lesson.unify("It’s a test – really.")) == len("It’s a test – really."),
+          "unify must be one-for-one; the page maps highlight offsets through it")
+
+
 def main() -> int:
     check_schedule_guard()
     check_never_repeats_a_lesson()
+    check_alignment_is_computed_once()
+    check_page_footers_leave_the_transcript()
     check(TEMPLATE.exists(), f"missing template: {TEMPLATE}")
     if failures:
         print("\n".join(failures))
@@ -196,6 +250,16 @@ def main() -> int:
     # The A/B/C labels above each sentence were noise on the page; they stay in
     # the payload as authoring metadata but must not be rendered.
     check("词不认识" not in page, "the A/B/C diagnosis labels must not be rendered")
+
+    # The official transcript travels with the page, so it is readable offline
+    # and the practised sentences can be shown in context.
+    check('id="script-toggle"' in page and 'id="script-body"' in page,
+          "missing the official-transcript panel and its button")
+    if data:
+        payload = json.loads(data.group(1))
+        carried = payload.get("transcript_text", "")
+        check("Self test sentence number 2." in carried,
+              "the practised sentences must be findable in the embedded transcript")
 
     # BBC audio is embedded here as a personal copy.
     check("本内容仅供个人学习使用。" in page, "missing the personal-use notice")

@@ -30,7 +30,7 @@ import sys
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 
 HERE = Path(__file__).resolve().parent
 SKILL_ROOT = HERE.parent
@@ -42,6 +42,11 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ClearEnglish/1.0"
 
 # 定时备课看这一行判断「今天没有新一期」，不要改动它的措辞。
 NOTHING_NEW = "NOTHING_NEW"
+
+# 课件预览服务：固定端口，固定只绑回环。换成 0.0.0.0 就等于把内嵌 BBC 音频
+# 的课件发到局域网上去了，那是用户的个人副本，不该出这台电脑。
+LOOPBACK = "127.0.0.1"
+PREVIEW_PORT = 8931
 
 MIN_SENTENCES = 3
 MAX_SENTENCES = 5
@@ -79,14 +84,24 @@ def log(message: str) -> None:
 
 
 # --------------------------------------------------------------------------- 文本规范化
-def normalize(text: str) -> str:
-    """统一引号、破折号、空白，供逐字校验使用。"""
+def unify(text: str) -> str:
+    """只做一对一替换：替换前后长度不变，页面标高亮时要靠这一点对齐下标。"""
     text = unicodedata.normalize("NFKC", text)
     for source, target in (("’", "'"), ("‘", "'"), ("“", '"'),
                            ("”", '"'), ("–", "-"), ("—", "-"),
                            (" ", " ")):
         text = text.replace(source, target)
-    return re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def normalize(text: str) -> str:
+    """统一引号、破折号、空白，供逐字校验使用。换行也压成空格。"""
+    return re.sub(r"\s+", " ", unify(text)).strip()
+
+
+# 每页页脚。留着有两个害处：正文里插进一串版权字样，跨页的那句话还会被
+# 拦腰截断——截断之后它就不再是 transcript 的子串，Agent 永远选不中它。
+PAGE_FOOTER = re.compile(r"^\s*6 Minute English\s*©.*$", re.I | re.M)
 
 
 def tokenize(text: str) -> list[str]:
@@ -240,7 +255,7 @@ def extract_transcript(pdf_path: Path) -> str:
     except Exception as error:  # noqa: BLE001
         raise PipelineError("official_transcript_missing", f"PDF 正文抽取失败：{error}") from error
 
-    text = normalize("\n".join(pages))
+    text = normalize(PAGE_FOOTER.sub(" ", unify("\n".join(pages))))
     if len(text) < 400:
         raise PipelineError("official_transcript_missing",
                             f"抽取到的正文只有 {len(text)} 字，明显不是完整 Transcript。")
@@ -266,7 +281,12 @@ class Alignment:
 def transcribe(audio_path: Path, model_name: str = "base.en") -> Alignment:
     from faster_whisper import WhisperModel
 
-    log(f"  本地 Whisper（{model_name}）对齐中，一集 6 分钟大约 1 分钟…")
+    log(f"  本地 Whisper（{model_name}）对齐中，一集 6 分钟约 40 秒…")
+    # 两个参数都别动，实测过：
+    #   beam_size=1 快 14 秒，但五句里只对上两句，最差漂了 0.7 秒——省下的时间
+    #     直接变成字幕对不上音，得不偿失。
+    #   cpu_threads=8 在 4 核 8 线程的笔记本上反而慢一倍（70s vs 39s），
+    #     超订阅把 int8 kernel 拖垮了。默认值就是最好的。
     model = WhisperModel(model_name, device="cpu", compute_type="int8")
     segments, info = model.transcribe(str(audio_path), word_timestamps=True, language="en")
 
@@ -280,6 +300,43 @@ def transcribe(audio_path: Path, model_name: str = "base.en") -> Alignment:
     if not words:
         raise PipelineError("alignment_low_confidence", "Whisper 没有产出任何词级时间戳。")
     return Alignment(words, model_name, float(info.duration))
+
+
+def alignment_path(workspace: Path, episode_id: str) -> Path:
+    return workspace / f"{episode_id}.alignment.json"
+
+
+def save_alignment(path: Path, alignment: Alignment, audio_sha256: str) -> None:
+    """把词级时间戳落盘，build 直接读，不要再跑一次 Whisper。
+
+    对齐是整条流水线里最慢的一步（一集 40 秒）。prepare 跑完就扔掉、
+    build 再跑一遍，等于每节课白等 40 秒。
+    """
+    path.write_text(json.dumps({
+        "model_name": alignment.model_name,
+        "duration": alignment.duration,
+        "audio_sha256": audio_sha256,
+        # 词表压成四元组，比一词一个对象小三倍，969 个词约 60KB
+        "words": [[word.text, round(word.start, 3), round(word.end, 3),
+                   round(word.probability, 4)] for word in alignment.words],
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+def load_alignment(path: Path, audio_sha256: str) -> Alignment | None:
+    """读回缓存。音频对不上号就当没有——宁可重跑，也不能拿错音频的时间戳去切句。"""
+    if not path.exists():
+        return None
+    try:
+        cached = json.loads(path.read_text(encoding="utf-8"))
+        if cached.get("audio_sha256") != audio_sha256:
+            return None
+        words = [Word(text, float(start), float(end), float(probability))
+                 for text, start, end, probability in cached["words"]]
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None
+    if not words:
+        return None
+    return Alignment(words, cached.get("model_name", "base.en"), float(cached.get("duration", 0.0)))
 
 
 def locate(sentence: str, alignment: Alignment) -> dict:
@@ -403,7 +460,14 @@ def command_prepare(args: argparse.Namespace) -> None:
     transcript = extract_transcript(pdf_path)
     log(f"  Transcript 正文 {len(transcript)} 字")
 
-    alignment = transcribe(audio_path, args.model)
+    audio_sha256 = hashlib.sha256(audio_path.read_bytes()).hexdigest()
+    cache = alignment_path(workspace, episode.episode_id)
+    alignment = load_alignment(cache, audio_sha256)
+    if alignment is None:
+        alignment = transcribe(audio_path, args.model)
+        save_alignment(cache, alignment, audio_sha256)
+    else:
+        log("  复用上次的词级时间戳，跳过 Whisper")
     log(f"  词级时间戳 {len(alignment.words)} 个，音频 {alignment.duration:.0f}s")
 
     request = {
@@ -417,7 +481,8 @@ def command_prepare(args: argparse.Namespace) -> None:
             "duration_seconds": round(alignment.duration, 2),
         },
         "audio_file": audio_path.name,
-        "audio_sha256": hashlib.sha256(audio_path.read_bytes()).hexdigest(),
+        "audio_sha256": audio_sha256,
+        "alignment_file": cache.name,
         "model_name": alignment.model_name,
         "transcript_text": transcript,
         "instruction": (
@@ -463,13 +528,21 @@ def command_build(args: argparse.Namespace) -> None:
         verified.append((item, text))
     log(f"  逐字校验通过 {len(verified)} 句")
 
+    # 时间戳是 prepare 已经算好的，直接读。只有缓存丢了或者对不上音频
+    # 才重跑 Whisper——那是慢路径，不是常态。
     alignment = None
     sentences = []
     for item, text in verified:
         if len(sentences) >= MAX_SENTENCES:
             break
         if alignment is None:
-            alignment = transcribe(audio_path, request.get("model_name", "base.en"))
+            cache = workspace / request.get("alignment_file", "")
+            alignment = load_alignment(cache, request["audio_sha256"])
+            if alignment is None:
+                log("  没有可用的对齐缓存，重跑一次 Whisper…")
+                alignment = transcribe(audio_path, request.get("model_name", "base.en"))
+                save_alignment(alignment_path(workspace, request["episode"]["id"]),
+                               alignment, request["audio_sha256"])
         try:
             timing = locate(text, alignment)
         except PipelineError as error:
@@ -511,6 +584,9 @@ def command_build(args: argparse.Namespace) -> None:
         "mode": mode,
         "generated_at": args.now or "",
         "episode": request["episode"],
+        # 官方 Transcript 正文一起带上：页面要能离线翻原文，不然「看一眼上下文」
+        # 就得跑去开 BBC 的 PDF，断网时干脆没得看。7KB 而已。
+        "transcript_text": transcript,
         "shadow": {
             "algorithm_version": "bbc-shadow-align-v2",
             "model_name": request.get("model_name", "base.en"),
@@ -535,6 +611,91 @@ def command_build(args: argparse.Namespace) -> None:
     log("  第一次点录音时浏览器会问一次麦克风权限，允许一次即可，之后每句都不再打断。")
 
 
+# --------------------------------------------------------------------------- doctor
+REQUIREMENTS = (("requests", "requests"), ("bs4", "beautifulsoup4"),
+                ("pypdf", "pypdf"), ("faster_whisper", "faster-whisper"))
+
+
+def command_doctor(args: argparse.Namespace) -> None:
+    """把安装的代价一次性付掉，别让它混在第一节课的等待里。
+
+    第一次备课慢得离谱，慢的其实不是备课：是 pip 装 ctranslate2，是 Whisper
+    去 HuggingFace 拉 145MB 的 base.en。分不清的人会以为这工具就是这么慢。
+    """
+    import time
+
+    log("环境自检")
+    missing = []
+    for module, package in REQUIREMENTS:
+        try:
+            __import__(module)
+            log(f"  ✓ {package}")
+        except ImportError:
+            missing.append(package)
+            log(f"  × {package} 没装")
+    if missing:
+        log("\n装这些：pip install " + " ".join(missing))
+        sys.exit(3)
+
+    from faster_whisper import WhisperModel
+
+    log(f"\n预热 Whisper 模型（{args.model}）")
+    log("  第一次会从 HuggingFace 下载约 145MB，只发生一次；之后都是读本地缓存。")
+    started = time.perf_counter()
+    WhisperModel(args.model, device="cpu", compute_type="int8")
+    log(f"  就绪，用时 {time.perf_counter() - started:.1f}s")
+
+    courses = Path(args.courses).resolve() if args.courses else default_courses_dir()
+    built = sorted(courses.glob("*.html")) if courses.is_dir() else []
+    log(f"\n课程目录：{courses}（已有 {len(built)} 节）")
+    log("环境就绪，现在备一节课只需要下载 + 一次 40 秒的对齐。")
+
+
+# --------------------------------------------------------------------------- serve
+def command_serve(args: argparse.Namespace) -> None:
+    """把课程目录喂给内置浏览器。只监听回环地址，不对外。
+
+    WorkBuddy 的内置浏览器打不开 file://，双击虽然能用却进不去它的窗口。
+    起一个 127.0.0.1 上的静态服务，课程页就能在里面正常播放、录音。
+    """
+    import functools
+    import http.server
+
+    root = Path(args.courses).resolve() if args.courses else default_courses_dir()
+    if not root.is_dir():
+        raise PipelineError("needs_source_validation",
+                            f"课程目录还不存在：{root}。先备一节课再开预览服务。")
+
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, fmt, *rest):      # 逐条请求日志会把 Agent 的输出淹掉
+            pass
+
+    handler = functools.partial(Handler, directory=str(root))
+    # 只绑回环：局域网里的其他机器连不上，课件不出这台电脑。
+    try:
+        server = http.server.ThreadingHTTPServer((LOOPBACK, args.port), handler)
+    except OSError as error:
+        raise PipelineError(
+            "needs_source_validation",
+            f"{LOOPBACK}:{args.port} 起不来（{error.strerror or error}）。"
+            "多半是上一次的预览服务还开着——直接用它，或者换 --port。",
+        ) from error
+
+    base = f"http://{LOOPBACK}:{args.port}/"
+    log(f"预览服务已启动：{base}")
+    log(f"  根目录 {root}")
+    log("  只监听回环地址，局域网访问不到。Ctrl+C 停止。\n")
+    for page in sorted(root.glob("*.html"), reverse=True):
+        log(f"  {base}{quote(page.name)}")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        log("\n预览服务已停止。")
+    finally:
+        server.server_close()
+
+
 # --------------------------------------------------------------------------- CLI
 def main() -> None:
     parser = argparse.ArgumentParser(description="Clear English Speaking 备课流水线")
@@ -557,6 +718,16 @@ def main() -> None:
     build.add_argument("--no-embed", action="store_true", help="不内嵌音频，改用官方远程地址（文件小但要联网）")
     build.add_argument("--now", help="写进课程的生成时间")
     build.set_defaults(handler=command_build)
+
+    doctor = sub.add_parser("doctor", help="检查依赖并预热 Whisper 模型（装好后跑一次）")
+    doctor.add_argument("--model", default="base.en", help="要预热的 Whisper 模型")
+    doctor.add_argument("--courses", help="课程目录，默认「文档 / ClearEnglish」")
+    doctor.set_defaults(handler=command_doctor)
+
+    serve = sub.add_parser("serve", help=f"在 {LOOPBACK}:{PREVIEW_PORT} 上开课件预览服务")
+    serve.add_argument("--courses", help="课程目录，默认「文档 / ClearEnglish」")
+    serve.add_argument("--port", type=int, default=PREVIEW_PORT, help="端口，默认 %(default)s")
+    serve.set_defaults(handler=command_serve)
 
     args = parser.parse_args()
     try:

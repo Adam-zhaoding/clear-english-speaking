@@ -14,7 +14,7 @@ description: 用 BBC Learning English 6 Minute English 的官方素材，生成�
 
 | 谁 | 做什么 |
 |---|---|
-| 脚本 | 找期次、下载官方 MP3 与 Transcript PDF、抽正文、Whisper 词级对齐、逐字校验、渲染 HTML |
+| 脚本 | 找期次、下载官方 MP3 与 Transcript PDF、抽正文、Whisper 词级对齐、逐字校验、渲染 HTML、起预览服务 |
 | 你 | 只做一件事：挑 3–5 句重点句，写翻译、词义、A/B/C 卡点、听力提示 |
 
 英文原句永远逐字照抄官方 Transcript。你不负责判断音频地址、文件哈希或时间戳。
@@ -30,11 +30,18 @@ description: 用 BBC Learning English 6 Minute English 的官方素材，生成�
 - 不存在：`git clone https://github.com/Adam-zhaoding/clear-english-speaking` 到用户主目录；
   机器上没有 git 就下载仓库 ZIP，解压到同一位置。
 
-首次装好后跑一次自检，通过再往下走：
+首次装好后跑这两条，通过再往下走：
 
 ```bash
-python scripts/selftest.py
+python -m pip install requests beautifulsoup4 pypdf faster-whisper
+python scripts/make_lesson.py doctor
 ```
+
+`doctor` 会查依赖，并把 Whisper 的 `base.en` 模型（约 145MB）预先拉下来。
+**这一步只做一次**，别省：省掉它，这 145MB 就会挂在用户第一节课的等待里，
+让人以为备课本来就要好几分钟。装完之后每节课只剩「下载素材 + 一次 40 秒对齐」。
+
+想更彻底一点再跑一次 `python scripts/selftest.py`（离线、几秒钟）。
 
 **课程输出目录不要问用户。** 脚本默认写到用户的「文档 / ClearEnglish」，
 自动建好。只有用户主动要求换地方时，才给 `--output`。
@@ -46,19 +53,13 @@ cd scripts
 python make_lesson.py prepare --workspace lesson-work
 ```
 
-指定某一期就加 `--url <BBC 期次页地址>`；不加就自动取最新一期。
+指定某一期就加 `--url <BBC 期次页地址>`；不加就自动挑一期还没备过的。
 
-这一步会下载素材并跑本地 Whisper（一集 6 分钟的节目约需 1 分钟），
-产出 `lesson-work/draft-request.json`。
+这一步下载素材、跑一次本地 Whisper 对齐（一集 6 分钟约 40 秒），
+产出 `lesson-work/draft-request.json`，同时把词级时间戳存进 `lesson-work/<期次>.alignment.json`。
 
-**首次运行会额外下载 Whisper 模型**（几十到上百 MB），可能多花几分钟，属正常，
-不要当成卡死中断掉。提前告诉用户一声，然后耐心等。
-
-缺依赖时自己装完继续，不用回头问用户：
-
-```bash
-python -m pip install requests beautifulsoup4 pypdf faster-whisper
-```
+**别删那个 alignment 文件，也别换 workspace。** build 直接读它，所以 build 只要零点几秒。
+换了目录就等于让 Whisper 白跑第二遍，一节课平白多等 40 秒。
 
 ### 第二步：你来选句（这是你唯一的创作工作）
 
@@ -114,30 +115,37 @@ python make_lesson.py build --workspace lesson-work
 
 产出两个文件：
 
-- `<期次>_<标题>.html` —— 双击就能练，音频已内嵌，断网可用
+- `<期次>_<标题>.html` —— 双击就能练，音频和官方 Transcript 都已内嵌，断网可用
 - `<期次>_<标题>.lesson.json` —— 完整数据，方便以后重渲染
-
-告诉用户 HTML 的完整路径，让他**直接双击打开**就行：播放、变速、循环、跟读、录音全都可用，
-不需要起本地服务，不需要命令行。
 
 第一次点「开始录音」时浏览器会弹一次麦克风授权，**允许一次即可**，
 这一次授权对整个页面所有句子有效，后面每一句都不会再打断。
 
-不要让用户去起 `http://localhost`，也不要说 `file://` 不能录音——Chrome 和 Edge 把双击打开的
-本地文件视为安全上下文，麦克风是通的（已实测验证）。
+页面上「📄 官方 Transcript」按钮会展开全篇原文，这节课练的几句标了绿底。
+原文是逐字来自官方 PDF 的，你不要另外复述或改写。
 
-### 课件预览
-
-上面那条是「别拿本地服务当练习的前提」，不是禁止本地服务。用户自己开口要预览时照做：
-他说「**服务打开，我要进行课件预览**」，就在课程目录上起一个本地静态服务，把课程页开给他看：
+### 第四步：起预览服务，把课件喂进 WorkBuddy
 
 ```bash
-python -m http.server 8775 --directory "<课程目录>"
+python make_lesson.py serve
 ```
 
-然后打开 `http://localhost:8775/<期次>_<标题>.html`。
+**每次备完课都要做这一步**，不是可选项。WorkBuddy 的内置浏览器打不开 `file://`，
+只给一个本地路径，用户在 WorkBuddy 里点开就是一片空白。起了服务再把
+`http://127.0.0.1:8931/<期次>_<标题>.html` 给他，播放、变速、循环、跟读、录音才都能用。
 
-预览用完把服务关掉，不要留着占端口，也不要因此改口说双击打不开。
+用户说「**服务打开，我要进行课件预览**」时，跑的也是这一条。
+
+这个服务：
+
+- 固定 `127.0.0.1:8931`，**只监听回环地址**。课件里内嵌着 BBC 音频，是用户的个人副本，
+  不该出这台电脑——所以绝不要改成 `0.0.0.0`，也不要用 `python -m http.server` 顶替
+  （它默认对整个局域网开放）。
+- 端口被占多半是上一次的服务还开着，直接用就行，不必换端口。
+- 它会一直占着这个终端。跑在后台，别用前台阻塞的方式跑完就干等。
+
+在 WorkBuddy 之外，用户**双击 HTML 一样能练**，麦克风也是通的——Chrome 和 Edge 把
+双击打开的本地文件视为安全上下文（已实测验证）。不要说 `file://` 不能录音。
 
 ## 定时自动备课
 
@@ -167,9 +175,11 @@ BBC 每周才更新一期，用户却是每天练。所以脚本不是只盯最�
 
 无人值守不降低选句标准。宁可只挑 3 句好的，也不要为了凑满 5 句放进一句平淡的过渡语。
 
-### 第三步：报告
+### 第三步：起服务并报告
 
-把 HTML 的完整路径发给用户，附一句这期讲什么、你挑了哪几句。
+跑 `python make_lesson.py serve`（后台），把
+`http://127.0.0.1:8931/<期次>_<标题>.html` 发给用户，附一句这期讲什么、你挑了哪几句。
+本地路径也一并给上，他不在 WorkBuddy 里的时候双击就能用。
 
 失败了就直接说失败在哪一步、失败码是什么。**不要自己反复重试**——
 BBC 偶尔会拒连，下一次定时触发会自然重来。
@@ -186,6 +196,7 @@ BBC 偶尔会拒连，下一次定时触发会自然重来。
 | `sentence_not_in_official_transcript` | 你抄的句子不是原文 | 重新逐字照抄，再跑一次 build |
 | `alignment_low_confidence` | 这句在音频里匹配不上 | 换一句；或用 `--model small.en` 重跑 prepare |
 | `invalid_sentence_timing` | 句子时长越界 | 换一句 |
+| 预览服务起不来 | 8931 被占 | 多半是上次的服务还开着，直接用；真要换就 `serve --port` |
 
 **句子层失败不让整集报废。** 如果最后凑不齐 3 句，脚本会自动退回
 `listen_only` 模式：整集音频照样能播、能变速、能快进快退。这是预期行为，如实告诉用户即可。

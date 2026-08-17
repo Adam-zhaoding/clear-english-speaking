@@ -178,6 +178,20 @@
   .rec-note { margin: 0 0 11px; color: var(--ink-faint); font-size: 12.5px; line-height: 1.55; }
   .rec-player { width: 100%; margin-top: 11px; }
 
+  /* 官方 Transcript */
+  .script {
+    max-height: 62vh; padding: 22px 26px; overflow-y: auto;
+    border: 1px solid var(--rule); border-radius: 18px; background: var(--card);
+    font-size: 15.5px; line-height: 1.85;
+  }
+  .script p { margin: 0 0 15px; }
+  .script p:last-child { margin-bottom: 0; }
+  .script mark {
+    padding: 1px 3px; border-radius: 5px; background: var(--sage); color: var(--moss);
+    box-shadow: inset 0 -1px 0 rgba(30, 70, 50, .25);
+  }
+  .script-note { margin: 0 0 14px; color: var(--ink-faint); font-size: 13px; }
+
   .notice {
     display: flex; gap: 11px; padding: 15px 18px; margin-bottom: 24px;
     border: 1px solid rgba(165, 112, 26, .28); border-radius: 14px;
@@ -237,6 +251,7 @@
   <nav class="nav" id="nav">
     <a href="#listen" class="is-active"><span class="dot"></span>整集精听</a>
     <a href="#shadow"><span class="dot"></span>影子跟读<span class="count" id="nav-count">—</span></a>
+    <a href="#script" id="nav-script" hidden><span class="dot"></span>官方 Transcript</a>
     <a href="#about"><span class="dot"></span>关于本课</a>
   </nav>
   <div class="rail-foot">
@@ -287,6 +302,7 @@
         <button class="small is-on" data-speed="1">1.0×</button>
         <button class="small" data-speed="1.25">1.25×</button>
         <button class="small" data-speed="1.5">1.5×</button>
+        <button class="small" id="script-toggle" hidden>📄 官方 Transcript</button>
       </div>
       <div class="listen-status" id="listen-status">1.0× · 准备播放</div>
     </div>
@@ -305,6 +321,15 @@
       </div>
     </div>
     <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="script" hidden>
+    <div class="section-head">
+      <span class="idx">原文</span><h3>官方 Transcript</h3>
+      <span class="why">下载自 BBC 官方 PDF，逐字未改</span>
+    </div>
+    <p class="script-note" id="script-note"></p>
+    <div class="script" id="script-body"></div>
   </section>
 
   <section id="about">
@@ -944,6 +969,84 @@
   // 只有真正拿不到麦克风接口的浏览器才提示，别让用户以为是坏了。
   if (!window.isSecureContext || !micSupported()) {
     document.getElementById("offline-note").hidden = false;
+  }
+
+  /* ---------- 官方 Transcript ----------
+     prepare 从官方 PDF 抽出来的正文，一字未改。BBC 的 PDF 抽出来是一页一大块，
+     没有说话人换行可用，所以这里只按句号分段——是为了能读，不是在还原对话结构。
+     练过的句子标出来，方便回头看上下文；断网也照样能翻。
+     早期课程没有这个字段，那就整节都不出现。                        */
+  const PARAGRAPH_CHARS = 420;
+  const transcriptText = typeof lesson.transcript_text === "string" ? lesson.transcript_text : "";
+  if (transcriptText.trim()) {
+    const scriptSection = document.getElementById("script");
+    const scriptToggle = document.getElementById("script-toggle");
+    const body = document.getElementById("script-body");
+
+    const ranges = [];
+    sentences.forEach(item => {
+      const found = transcriptText.indexOf(item.text);
+      if (found < 0) return;            // 找不到就不标，不猜位置
+      ranges.push([found, found + item.text.length]);
+    });
+    ranges.sort((a, b) => a[0] - b[0]);
+    const insideMark = position => ranges.some(([from, to]) => position > from && position < to);
+
+    // 分段点只挑句号后面，且不能落在高亮句中间，否则一句话会被劈成两段
+    const bounds = [0];
+    for (let i = 0; i < transcriptText.length - 1; i += 1) {
+      if (transcriptText[i] !== "." || transcriptText[i + 1] !== " ") continue;
+      if (i + 2 - bounds[bounds.length - 1] < PARAGRAPH_CHARS) continue;
+      if (insideMark(i + 2)) continue;
+      bounds.push(i + 2);
+    }
+    bounds.push(transcriptText.length);
+
+    const appendRange = (parent, from, to) => {
+      let cursor = from;
+      ranges.forEach(([markFrom, markTo]) => {
+        const start = Math.max(markFrom, from);
+        const end = Math.min(markTo, to);
+        if (start >= end || start < cursor) return;
+        if (start > cursor) parent.append(document.createTextNode(transcriptText.slice(cursor, start)));
+        const hit = document.createElement("mark");
+        hit.textContent = transcriptText.slice(start, end);
+        parent.append(hit);
+        cursor = end;
+      });
+      if (cursor < to) parent.append(document.createTextNode(transcriptText.slice(cursor, to)));
+    };
+
+    for (let i = 0; i < bounds.length - 1; i += 1) {
+      const paragraph = document.createElement("p");
+      appendRange(paragraph, bounds[i], bounds[i + 1]);
+      body.append(paragraph);
+    }
+
+    document.getElementById("script-note").textContent = ranges.length
+      ? "绿底是这节课练的 " + ranges.length + " 句。全篇逐字来自官方 PDF，仅按句号分段以便阅读。"
+      : "全篇逐字来自官方 PDF，仅按句号分段以便阅读。";
+
+    const openScript = () => {
+      scriptSection.hidden = false;
+      scriptToggle.classList.add("is-on");
+      scriptToggle.textContent = "📄 收起 Transcript";
+      scriptSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    scriptToggle.hidden = false;
+    scriptToggle.addEventListener("click", () => {
+      if (scriptSection.hidden) { openScript(); return; }
+      scriptSection.hidden = true;
+      scriptToggle.classList.remove("is-on");
+      scriptToggle.textContent = "📄 官方 Transcript";
+    });
+    const scriptLink = document.getElementById("nav-script");
+    scriptLink.hidden = false;
+    scriptLink.addEventListener("click", event => {
+      if (!scriptSection.hidden) return;   // 已经展开就交给锚点自己跳
+      event.preventDefault();
+      openScript();
+    });
   }
 
   // 关于本课

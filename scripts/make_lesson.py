@@ -190,6 +190,7 @@ class Episode:
     title: str
     audio_url: str
     transcript_url: str
+    description: str = ""
 
 
 def parse_episode(page_url: str) -> Episode:
@@ -208,7 +209,20 @@ def parse_episode(page_url: str) -> Episode:
     match = re.search(r"/(\d{6})_", audio_url)
     episode_id = match.group(1) if match else hashlib.sha1(audio_url.encode()).hexdigest()[:6]
 
-    return Episode(page_url, episode_id, episode_title(soup, audio_url), audio_url, transcript_url)
+    return Episode(page_url, episode_id, episode_title(soup, audio_url), audio_url,
+                   transcript_url, episode_description(soup))
+
+
+def episode_description(soup) -> str:
+    """页面上 BBC 自己写的一句话简介。Agent 写不出中文摘要时拿它兜底。"""
+    for selector, attribute in (('meta[property="og:description"]', "content"),
+                                ('meta[name="description"]', "content")):
+        node = soup.select_one(selector)
+        if node and node.get(attribute):
+            text = normalize(node[attribute])
+            if len(text) > 12:
+                return text
+    return ""
 
 
 GENERIC_TITLES = {"learning english", "bbc learning english", "6 minute english", "home"}
@@ -393,7 +407,8 @@ def locate(sentence: str, alignment: Alignment) -> dict:
 
 
 # --------------------------------------------------------------------------- 4. 渲染
-def render(lesson: dict, audio_path: Path, output: Path, embed: bool = True) -> Path:
+def render(lesson: dict, audio_path: Path, output: Path, embed: bool = True,
+           pdf_path: Path | None = None) -> Path:
     if not TEMPLATE.exists():
         raise PipelineError("needs_source_validation", f"找不到播放器模板：{TEMPLATE}")
 
@@ -405,9 +420,18 @@ def render(lesson: dict, audio_path: Path, output: Path, embed: bool = True) -> 
     else:
         source = lesson["episode"]["audio_url"]
 
+    # 官方 Transcript PDF 一起内嵌（约 100KB，音频的百分之一）。不带上它，
+    # 「打开原文」就得联网去 BBC 取，断网时按钮等于摆设。
+    if pdf_path is not None and pdf_path.exists():
+        pdf_source = ("data:application/pdf;base64,"
+                      + base64.b64encode(pdf_path.read_bytes()).decode("ascii"))
+    else:
+        pdf_source = ""
+
     html = (template
             .replace("__LESSON_JSON__", json.dumps(lesson, ensure_ascii=False))
             .replace("__AUDIO_SRC__", source)
+            .replace("__TRANSCRIPT_SRC__", pdf_source)
             .replace("__TITLE__", lesson["episode"]["title"]))
 
     temporary = output.with_suffix(".html.tmp")
@@ -479,8 +503,10 @@ def command_prepare(args: argparse.Namespace) -> None:
             "audio_url": episode.audio_url,
             "transcript_pdf_url": episode.transcript_url,
             "duration_seconds": round(alignment.duration, 2),
+            "official_description": episode.description,
         },
         "audio_file": audio_path.name,
+        "transcript_file": pdf_path.name,
         "audio_sha256": audio_sha256,
         "alignment_file": cache.name,
         "model_name": alignment.model_name,
@@ -488,7 +514,8 @@ def command_prepare(args: argparse.Namespace) -> None:
         "instruction": (
             f"从 transcript_text 里挑 {MIN_SENTENCES}-{MAX_SENTENCES} 句重点句，"
             "英文必须逐字照抄，另写 translation_zh、glossary、diagnosis_tags(A/B/C) "
-            "和 listening_focus，存成 draft.json。"
+            "和 listening_focus；再写一条 summary_zh（2-3 句中文，说清这期讲了什么）。"
+            "存成 draft.json。"
         ),
     }
     target = workspace / "draft-request.json"
@@ -511,6 +538,7 @@ def command_build(args: argparse.Namespace) -> None:
     draft = json.loads(draft_path.read_text(encoding="utf-8"))
     transcript = normalize(request["transcript_text"])
     audio_path = workspace / request["audio_file"]
+    pdf_path = workspace / request.get("transcript_file", "")
 
     raw = draft.get("sentences") or []
     log(f"第二步 · 校验并渲染（草案给了 {len(raw)} 句）")
@@ -579,14 +607,17 @@ def command_build(args: argparse.Namespace) -> None:
     else:
         log(f"  对齐成功 {len(sentences)} 句")
 
+    # 「主要内容」优先用 Agent 写的中文摘要；没写就退回 BBC 页面上的官方简介，
+    # 两个都没有就留空，页面显示一个破折号。绝不自己编。
+    episode_meta = dict(request["episode"])
+    episode_meta["summary"] = (str(draft.get("summary_zh", "")).strip()
+                               or episode_meta.get("official_description", ""))
+
     lesson = {
         "version": 1,
         "mode": mode,
         "generated_at": args.now or "",
-        "episode": request["episode"],
-        # 官方 Transcript 正文一起带上：页面要能离线翻原文，不然「看一眼上下文」
-        # 就得跑去开 BBC 的 PDF，断网时干脆没得看。7KB 而已。
-        "transcript_text": transcript,
+        "episode": episode_meta,
         "shadow": {
             "algorithm_version": "bbc-shadow-align-v2",
             "model_name": request.get("model_name", "base.en"),
@@ -602,7 +633,8 @@ def command_build(args: argparse.Namespace) -> None:
 
     (output_dir / f"{stem}.lesson.json").write_text(
         json.dumps(lesson, ensure_ascii=False, indent=2), encoding="utf-8")
-    html = render(lesson, audio_path, output_dir / f"{stem}.html", embed=not args.no_embed)
+    html = render(lesson, audio_path, output_dir / f"{stem}.html",
+                  embed=not args.no_embed, pdf_path=pdf_path)
 
     size = html.stat().st_size / 1024 / 1024
     log(f"\n课程已生成 → {html}")

@@ -86,13 +86,8 @@
 
   /* 整集播放 */
   .listen {
-    padding: 30px 32px; margin-bottom: 42px;
+    padding: 26px 32px 30px;
     border: 1px solid rgba(30, 70, 50, .14); border-radius: 22px; background: var(--sage-soft);
-  }
-  .listen-tag {
-    display: inline-block; padding: 3px 12px; margin-bottom: 13px; border-radius: 20px;
-    background: rgba(30, 70, 50, .12); color: var(--moss);
-    font-size: 12px; font-weight: 700; letter-spacing: .05em;
   }
   .listen h2 { margin: 0 0 6px; font-size: 27px; font-weight: 800; letter-spacing: -.02em; }
   .listen-sub { margin: 0 0 22px; color: var(--ink-soft); }
@@ -134,6 +129,15 @@
   .section-head h3 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.015em; }
   .section-head .idx { color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }
   .section-head .why { margin-left: auto; color: var(--ink-faint); font-size: 13px; }
+  /* 段落标题右上角的动作。前面的 .why 已经吃掉了 margin-left:auto，
+     所以这里不用再推，跟着它一起靠右就行。 */
+  .head-action {
+    align-self: center; padding: 5px 12px;
+    border: 1px solid rgba(30, 70, 50, .22); border-radius: 10px;
+    color: var(--moss); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap;
+    transition: background .18s, border-color .18s;
+  }
+  .head-action:hover { border-color: var(--moss); background: var(--sage); }
   section { margin-bottom: 44px; scroll-margin-top: 20px; }
 
   /* 句卡 */
@@ -177,20 +181,6 @@
   .card-status { min-height: 20px; margin-top: 12px; color: var(--moss-mid); font-size: 13px; }
   .rec-note { margin: 0 0 11px; color: var(--ink-faint); font-size: 12.5px; line-height: 1.55; }
   .rec-player { width: 100%; margin-top: 11px; }
-
-  /* 官方 Transcript */
-  .script {
-    max-height: 62vh; padding: 22px 26px; overflow-y: auto;
-    border: 1px solid var(--rule); border-radius: 18px; background: var(--card);
-    font-size: 15.5px; line-height: 1.85;
-  }
-  .script p { margin: 0 0 15px; }
-  .script p:last-child { margin-bottom: 0; }
-  .script mark {
-    padding: 1px 3px; border-radius: 5px; background: var(--sage); color: var(--moss);
-    box-shadow: inset 0 -1px 0 rgba(30, 70, 50, .25);
-  }
-  .script-note { margin: 0 0 14px; color: var(--ink-faint); font-size: 13px; }
 
   .notice {
     display: flex; gap: 11px; padding: 15px 18px; margin-bottom: 24px;
@@ -251,7 +241,6 @@
   <nav class="nav" id="nav">
     <a href="#listen" class="is-active"><span class="dot"></span>整集精听</a>
     <a href="#shadow"><span class="dot"></span>影子跟读<span class="count" id="nav-count">—</span></a>
-    <a href="#script" id="nav-script" hidden><span class="dot"></span>官方 Transcript</a>
     <a href="#about"><span class="dot"></span>关于本课</a>
   </nav>
   <div class="rail-foot">
@@ -279,8 +268,13 @@
   </div>
 
   <section id="listen">
+    <div class="section-head">
+      <span class="idx">精听</span><h3>整集精听</h3>
+      <span class="why" id="listen-why">先盲听一遍，卡住就回退重听</span>
+      <a class="head-action" id="open-transcript" hidden
+         target="_blank" rel="noopener noreferrer">📄 官方 Transcript</a>
+    </div>
     <div class="listen">
-      <span class="listen-tag" id="listen-tag">整集精听</span>
       <h2 id="episode-title">__TITLE__</h2>
       <p class="listen-sub" id="episode-sub">BBC 6 Minute English</p>
 
@@ -302,7 +296,6 @@
         <button class="small is-on" data-speed="1">1.0×</button>
         <button class="small" data-speed="1.25">1.25×</button>
         <button class="small" data-speed="1.5">1.5×</button>
-        <button class="small" id="script-toggle" hidden>📄 官方 Transcript</button>
       </div>
       <div class="listen-status" id="listen-status">1.0× · 准备播放</div>
     </div>
@@ -321,15 +314,6 @@
       </div>
     </div>
     <div class="cards" id="cards"></div>
-  </section>
-
-  <section id="script" hidden>
-    <div class="section-head">
-      <span class="idx">原文</span><h3>官方 Transcript</h3>
-      <span class="why">下载自 BBC 官方 PDF，逐字未改</span>
-    </div>
-    <p class="script-note" id="script-note"></p>
-    <div class="script" id="script-body"></div>
   </section>
 
   <section id="about">
@@ -355,6 +339,9 @@
 </div>
 
 <audio id="audio" preload="metadata" src="__AUDIO_SRC__"></audio>
+<!-- 官方 Transcript PDF。放 data-src 而不是 href：Chrome 不允许顶层导航到
+     data: URL，脚本会在打开页面时把它转成 blob: 再挂到按钮上。 -->
+<span id="transcript-pdf" hidden data-src="__TRANSCRIPT_SRC__"></span>
 <div class="toast" id="toast"></div>
 
 <script type="application/json" id="lesson-data">__LESSON_JSON__</script>
@@ -954,7 +941,8 @@
 
   const listenOnly = lesson.mode === "listen_only" || !sentences.length;
   document.getElementById("foot-mode").textContent = listenOnly ? "只可收听" : sentences.length + " 句训练";
-  document.getElementById("listen-tag").textContent = listenOnly ? "只可收听" : "整集精听";
+  document.getElementById("listen-why").textContent =
+    listenOnly ? "本集只可收听" : "先盲听一遍，卡住就回退重听";
   document.getElementById("nav-count").textContent = listenOnly ? "0" : String(sentences.length);
   document.getElementById("shadow-why").textContent =
     listenOnly ? "本集未生成" : "共 " + sentences.length + " 句，每次只练一句";
@@ -972,108 +960,50 @@
   }
 
   /* ---------- 官方 Transcript ----------
-     prepare 从官方 PDF 抽出来的正文，一字未改。BBC 的 PDF 抽出来是一页一大块，
-     没有说话人换行可用，所以这里只按句号分段——是为了能读，不是在还原对话结构。
-     练过的句子标出来，方便回头看上下文；断网也照样能翻。
-     早期课程没有这个字段，那就整节都不出现。                        */
-  const PARAGRAPH_CHARS = 420;
-  const transcriptText = typeof lesson.transcript_text === "string" ? lesson.transcript_text : "";
-  if (transcriptText.trim()) {
-    const scriptSection = document.getElementById("script");
-    const scriptToggle = document.getElementById("script-toggle");
-    const body = document.getElementById("script-body");
-
-    const ranges = [];
-    sentences.forEach(item => {
-      const found = transcriptText.indexOf(item.text);
-      if (found < 0) return;            // 找不到就不标，不猜位置
-      ranges.push([found, found + item.text.length]);
-    });
-    ranges.sort((a, b) => a[0] - b[0]);
-    const insideMark = position => ranges.some(([from, to]) => position > from && position < to);
-
-    // 分段点只挑句号后面，且不能落在高亮句中间，否则一句话会被劈成两段
-    const bounds = [0];
-    for (let i = 0; i < transcriptText.length - 1; i += 1) {
-      if (transcriptText[i] !== "." || transcriptText[i + 1] !== " ") continue;
-      if (i + 2 - bounds[bounds.length - 1] < PARAGRAPH_CHARS) continue;
-      if (insideMark(i + 2)) continue;
-      bounds.push(i + 2);
-    }
-    bounds.push(transcriptText.length);
-
-    const appendRange = (parent, from, to) => {
-      let cursor = from;
-      ranges.forEach(([markFrom, markTo]) => {
-        const start = Math.max(markFrom, from);
-        const end = Math.min(markTo, to);
-        if (start >= end || start < cursor) return;
-        if (start > cursor) parent.append(document.createTextNode(transcriptText.slice(cursor, start)));
-        const hit = document.createElement("mark");
-        hit.textContent = transcriptText.slice(start, end);
-        parent.append(hit);
-        cursor = end;
-      });
-      if (cursor < to) parent.append(document.createTextNode(transcriptText.slice(cursor, to)));
-    };
-
-    for (let i = 0; i < bounds.length - 1; i += 1) {
-      const paragraph = document.createElement("p");
-      appendRange(paragraph, bounds[i], bounds[i + 1]);
-      body.append(paragraph);
-    }
-
-    document.getElementById("script-note").textContent = ranges.length
-      ? "绿底是这节课练的 " + ranges.length + " 句。全篇逐字来自官方 PDF，仅按句号分段以便阅读。"
-      : "全篇逐字来自官方 PDF，仅按句号分段以便阅读。";
-
-    const openScript = () => {
-      scriptSection.hidden = false;
-      scriptToggle.classList.add("is-on");
-      scriptToggle.textContent = "📄 收起 Transcript";
-      scriptSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    scriptToggle.hidden = false;
-    scriptToggle.addEventListener("click", () => {
-      if (scriptSection.hidden) { openScript(); return; }
-      scriptSection.hidden = true;
-      scriptToggle.classList.remove("is-on");
-      scriptToggle.textContent = "📄 官方 Transcript";
-    });
-    const scriptLink = document.getElementById("nav-script");
-    scriptLink.hidden = false;
-    scriptLink.addEventListener("click", event => {
-      if (!scriptSection.hidden) return;   // 已经展开就交给锚点自己跳
-      event.preventDefault();
-      openScript();
-    });
+     备课时下载的那一份 PDF，整份内嵌在这个文件里，断网也打得开。
+     不能直接把 data: 塞进 href——Chrome 拒绝导航到顶层 data: URL——
+     所以开页面时转成 blob:。没有内嵌 PDF 的老课程退回官方链接（要联网）。 */
+  const transcriptLink = document.getElementById("open-transcript");
+  const embeddedPdf = document.getElementById("transcript-pdf").getAttribute("data-src") || "";
+  if (embeddedPdf.slice(0, 5) === "data:") {
+    const binary = atob(embeddedPdf.slice(embeddedPdf.indexOf(",") + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    transcriptLink.href = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    transcriptLink.hidden = false;
+  } else if (episode.transcript_pdf_url) {
+    transcriptLink.href = episode.transcript_pdf_url;
+    transcriptLink.title = "这节课没有内嵌 PDF，点开会去 BBC 取，需要联网";
+    transcriptLink.hidden = false;
   }
 
   // 关于本课
   const about = document.getElementById("about-body");
   const rows = [
-    ["期次", episode.id || "—"],
+    ["标题", episode.title || "—"],
     ["官方页面", episode.bbc_page_url || ""],
     ["官方 Transcript", episode.transcript_pdf_url || ""],
-    ["生成时间", lesson.generated_at || "—"]
+    ["主要内容", episode.summary || "—"]
   ];
   rows.forEach(([label, value]) => {
     const line = document.createElement("p");
-    line.style.margin = "0 0 8px";
+    line.style.cssText = "display:flex;gap:14px;margin:0 0 10px;align-items:baseline";
     const key = document.createElement("span");
-    key.style.cssText = "display:inline-block;min-width:118px;color:var(--ink-faint);font-size:13px";
+    key.style.cssText = "flex:0 0 96px;color:var(--ink-faint);font-size:13px";
     key.textContent = label;
-    line.append(key);
+    const body = document.createElement("span");
+    body.style.cssText = "flex:1;min-width:0;overflow-wrap:anywhere";
     if (/^https?:/.test(value)) {
       const link = document.createElement("a");
       link.href = value;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.textContent = value.length > 62 ? value.slice(0, 62) + "…" : value;
-      line.append(link);
+      body.append(link);
     } else {
-      line.append(document.createTextNode(value || "—"));
+      body.textContent = value || "—";
     }
+    line.append(key, body);
     about.append(line);
   });
 

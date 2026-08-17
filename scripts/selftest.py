@@ -27,6 +27,8 @@ TINY_WAV = (
     "data:audio/wav;base64,"
     "UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA="
 )
+# Likewise a stub PDF: nothing here opens it, the checks only look at the wiring.
+TINY_PDF = "data:application/pdf;base64,JVBERi0xLjQK"
 
 failures: list[str] = []
 
@@ -46,9 +48,8 @@ def render() -> str:
             "duration_seconds": 8,
             "bbc_page_url": "https://www.bbc.co.uk/learningenglish/",
             "transcript_pdf_url": "https://downloads.bbc.co.uk/learningenglish/x.pdf",
+            "summary": "这一期用来跑自检，没有真实内容。",
         },
-        "transcript_text": "Neil Self test sentence number 1. Beth "
-                           "Self test sentence number 2. Self test sentence number 3.",
         "shadow": {
             "algorithm_version": "selftest",
             "model_name": "none",
@@ -71,6 +72,7 @@ def render() -> str:
     return (template
             .replace("__LESSON_JSON__", json.dumps(lesson, ensure_ascii=False))
             .replace("__AUDIO_SRC__", TINY_WAV)
+            .replace("__TRANSCRIPT_SRC__", TINY_PDF)
             .replace("__TITLE__", lesson["episode"]["title"]))
 
 
@@ -251,15 +253,26 @@ def main() -> int:
     # the payload as authoring metadata but must not be rendered.
     check("词不认识" not in page, "the A/B/C diagnosis labels must not be rendered")
 
-    # The official transcript travels with the page, so it is readable offline
-    # and the practised sentences can be shown in context.
-    check('id="script-toggle"' in page and 'id="script-body"' in page,
-          "missing the official-transcript panel and its button")
-    if data:
-        payload = json.loads(data.group(1))
-        carried = payload.get("transcript_text", "")
-        check("Self test sentence number 2." in carried,
-              "the practised sentences must be findable in the embedded transcript")
+    # All three sections wear the same heading; the listen block no longer has
+    # its own pill.
+    heads = page.count('class="section-head"')
+    check(heads == 3, f"整集精听 / 影子跟读 / 关于本课 must share one heading style, found {heads}")
+    check("listen-tag" not in page, "the old 整集精听 pill must be gone")
+
+    # The downloaded transcript PDF travels with the page, so the button opens
+    # it offline. It must ride in data-src: Chrome refuses to navigate the top
+    # level to a data: URL, so the script hands the button a blob: instead.
+    check('id="open-transcript"' in page, "missing the official-transcript button")
+    check('data-src="data:application/pdf' in page,
+          "the downloaded transcript PDF must be embedded in the page")
+    check('href="data:' not in page,
+          "a data: URL in href is dead on click; convert it to blob: at runtime")
+
+    # 关于本课 carries what the learner actually needs, not build internals.
+    for label in ("标题", "官方页面", "官方 Transcript", "主要内容"):
+        check(f'"{label}"' in page, f"关于本课 must list {label}")
+    check('"期次"' not in page and '"生成时间"' not in page,
+          "episode number and build time were dropped from 关于本课")
 
     # BBC audio is embedded here as a personal copy.
     check("本内容仅供个人学习使用。" in page, "missing the personal-use notice")

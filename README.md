@@ -1,4 +1,4 @@
-# 🎧 Clear English Speaking · 给 WorkBuddy 用的英语精听技能
+# 🎧 Clear English Speaking · 给所有人用的英语精听技能
 
 > 类别：🗣️ 英语精听 · 🎙️ 影子跟读 · 🤖 Agent 技能 · 💻 本地工具 · 🆓 免费使用
 
@@ -6,7 +6,7 @@
 整集精听（变速、快进快退）+ 3–5 句影子跟读（单句循环、隐藏字幕、看翻译、录音回听）。
 
 不需要 API Key，不需要装 Node，不需要开终端敲一堆命令。
-你只要会复制粘贴一段话给 WorkBuddy。
+你只要会复制粘贴一段话给 WorkBuddy、Codex、Claude Code 等 Agent，对新手极其友好。
 
 ---
 

@@ -8,19 +8,19 @@
 <title>__TITLE__ · Clear English Speaking</title>
 <style>
   :root {
-    --paper: #f4f1e9;
-    --paper-warm: #efebe0;
+    --paper: #f5f6f8;
+    --paper-warm: #eef1ef;
     --card: #ffffff;
-    --ink: #23241f;
-    --ink-soft: #6f6c60;
-    --ink-faint: #9b978a;
-    --moss: #1e4632;
-    --moss-mid: #2f6045;
-    --sage: #dbe7db;
-    --sage-soft: #eaf0e8;
-    --rule: #e3ded1;
+    --ink: #1a1c1b;
+    --ink-soft: #5c645f;
+    --ink-faint: #8f968f;
+    --moss: #0e7a52;
+    --moss-mid: #0f8c5f;
+    --sage: #d7f4e6;
+    --sage-soft: #eafaf3;
+    --rule: #e3e7e4;
     --amber: #a5701a;
-    --amber-soft: #f6ecd8;
+    --amber-soft: #faf2e1;
     --brick: #9c3a28;
     --font-sans: "PingFang SC", "HarmonyOS Sans SC", "Source Han Sans SC",
                  "Noto Sans SC", "Microsoft YaHei", -apple-system, sans-serif;
@@ -36,10 +36,10 @@
     -webkit-font-smoothing: antialiased;
   }
   body::before {
-    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .3;
     background:
-      radial-gradient(880px 420px at 18% -8%, rgba(30, 70, 50, .07), transparent 70%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+      radial-gradient(880px 420px at 18% -8%, rgba(14, 122, 82, .06), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
   }
 
   /* ---------------- 左栏 ---------------- */
@@ -60,12 +60,12 @@
     color: var(--ink-soft); font-weight: 600; text-decoration: none;
     transition: background .18s, color .18s;
   }
-  .nav a:hover { color: var(--ink); background: rgba(30, 70, 50, .06); }
+  .nav a:hover { color: var(--ink); background: rgba(14, 122, 82, .06); }
   .nav a.is-active { color: var(--moss); background: var(--sage); }
   .nav .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
   .nav a.is-active .dot { background: var(--moss); }
   .nav .count {
-    margin-left: auto; padding: 1px 8px; border-radius: 20px; background: rgba(30, 70, 50, .1);
+    margin-left: auto; padding: 1px 8px; border-radius: 20px; background: rgba(14, 122, 82, .1);
     color: var(--moss); font-family: var(--font-mono); font-size: 11px;
   }
   .rail-foot {
@@ -87,7 +87,8 @@
   /* 整集播放 */
   .listen {
     padding: 26px 32px 30px;
-    border: 1px solid rgba(30, 70, 50, .14); border-radius: 22px; background: var(--sage-soft);
+    border: 1px solid rgba(14, 122, 82, .14); border-radius: 22px; background: var(--sage-soft);
+    box-shadow: 0 1px 2px rgba(20, 40, 32, .03), 0 10px 24px rgba(20, 40, 32, .04);
   }
   .listen h2 { margin: 0 0 6px; font-size: 27px; font-weight: 800; letter-spacing: -.02em; }
   .listen-sub { margin: 0 0 22px; color: var(--ink-soft); }
@@ -95,11 +96,11 @@
   .clock { color: var(--moss); font-family: var(--font-num); font-size: 19px; font-variant-numeric: tabular-nums; }
   input[type="range"] {
     flex: 1; min-width: 0; height: 6px; margin: 0; border-radius: 4px; cursor: pointer;
-    appearance: none; background: rgba(30, 70, 50, .18);
+    appearance: none; background: rgba(14, 122, 82, .18);
   }
   input[type="range"]::-webkit-slider-thumb {
     appearance: none; width: 17px; height: 17px; border: 3px solid #f7faf5; border-radius: 50%;
-    background: var(--moss); box-shadow: 0 1px 5px rgba(22, 52, 36, .3);
+    background: var(--moss); box-shadow: 0 1px 5px rgba(9, 48, 33, .3);
   }
   input[type="range"]::-moz-range-thumb {
     width: 17px; height: 17px; border: 3px solid #f7faf5; border-radius: 50%; background: var(--moss);
@@ -108,11 +109,11 @@
   .speeds { margin-top: 14px; }
   button {
     display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 18px;
-    border: 1px solid rgba(30, 70, 50, .2); border-radius: 12px;
+    border: 1px solid rgba(14, 122, 82, .2); border-radius: 12px;
     color: var(--moss); background: transparent; cursor: pointer; font: inherit; font-weight: 700;
     transition: background .18s, border-color .18s, transform .12s, color .18s;
   }
-  button:hover:not(:disabled) { background: rgba(30, 70, 50, .07); }
+  button:hover:not(:disabled) { background: rgba(14, 122, 82, .07); }
   button:active:not(:disabled) { transform: translateY(1px); }
   button:disabled { opacity: .4; cursor: not-allowed; }
   button.solid { border-color: var(--moss); color: #f3f7f1; background: var(--moss); }
@@ -133,7 +134,7 @@
      所以这里不用再推，跟着它一起靠右就行。 */
   .head-action {
     align-self: center; padding: 5px 12px;
-    border: 1px solid rgba(30, 70, 50, .22); border-radius: 10px;
+    border: 1px solid rgba(14, 122, 82, .22); border-radius: 10px;
     color: var(--moss); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap;
     transition: background .18s, border-color .18s;
   }
@@ -144,6 +145,7 @@
   .cards { display: grid; gap: 18px; }
   .card {
     padding: 24px 26px; border: 1px solid var(--rule); border-radius: 18px; background: var(--card);
+    box-shadow: 0 1px 2px rgba(20, 40, 32, .03), 0 10px 24px rgba(20, 40, 32, .05);
     animation: rise .45s cubic-bezier(.2, .7, .3, 1) backwards;
   }
   @keyframes rise { from { opacity: 0; transform: translateY(9px); } }
@@ -157,18 +159,18 @@
     padding: 0 1px; border: 0; border-bottom: 1px dotted var(--moss-mid); border-radius: 3px;
     background: transparent; color: inherit; font: inherit; min-height: auto; cursor: pointer;
   }
-  .word:hover { color: var(--moss); background: rgba(30, 70, 50, .09); }
+  .word:hover { color: var(--moss); background: rgba(14, 122, 82, .09); }
   .focus-note {
     display: flex; gap: 9px; padding: 12px 15px; margin-bottom: 15px;
     border-left: 3px solid var(--moss-mid); border-radius: 0 11px 11px 0;
-    background: rgba(30, 70, 50, .06); color: var(--ink-soft); font-size: 14px;
+    background: rgba(14, 122, 82, .06); color: var(--ink-soft); font-size: 14px;
   }
   .translation {
     padding: 12px 15px; margin-bottom: 15px; border-radius: 11px;
     background: var(--paper-warm); color: var(--ink); font-size: 15.5px; line-height: 1.66;
   }
   .bench { display: grid; grid-template-columns: minmax(0, 1fr) minmax(232px, .8fr); gap: 15px; margin-top: 16px; }
-  .pane { min-width: 0; padding: 15px; border: 1px solid var(--rule); border-radius: 13px; background: #fbfaf6; }
+  .pane { min-width: 0; padding: 15px; border: 1px solid var(--rule); border-radius: 13px; background: #f6f9f8; }
   .pane-title {
     margin: 0 0 11px; color: var(--ink-soft); font-size: 12px; font-weight: 800; letter-spacing: .05em;
   }
@@ -194,8 +196,8 @@
   .pop {
     position: fixed; z-index: 20; left: 50%; bottom: 28px; transform: translateX(-50%);
     width: min(430px, calc(100% - 32px)); padding: 17px 50px 17px 19px;
-    border: 1px solid rgba(30, 70, 50, .22); border-radius: 15px; background: var(--card);
-    box-shadow: 0 20px 55px rgba(22, 52, 36, .17);
+    border: 1px solid rgba(14, 122, 82, .22); border-radius: 15px; background: var(--card);
+    box-shadow: 0 20px 55px rgba(9, 48, 33, .17);
   }
   .pop strong { display: block; font-size: 17px; }
   .pop span { display: block; margin-top: 5px; color: var(--ink-soft); }
@@ -206,7 +208,7 @@
     padding-top: 22px; margin-top: 10px; border-top: 1px solid var(--rule);
     color: var(--ink-faint); font-size: 13px;
   }
-  .footer a { color: var(--moss-mid); }
+  .footer a, #about-body a { color: var(--moss-mid); }
   kbd {
     padding: 2px 7px; border: 1px solid var(--rule); border-radius: 5px;
     background: var(--card); font-family: var(--font-mono); font-size: 12px;
@@ -214,7 +216,7 @@
   .toast {
     position: fixed; right: 26px; bottom: 26px; z-index: 30; padding: 13px 20px;
     border-radius: 12px; background: var(--moss); color: #f2f6f0; font-weight: 700;
-    box-shadow: 0 14px 40px rgba(22, 52, 36, .28);
+    box-shadow: 0 14px 40px rgba(9, 48, 33, .28);
     opacity: 0; transform: translateY(10px); transition: opacity .25s, transform .25s;
   }
   .toast.is-on { opacity: 1; transform: translateY(0); }

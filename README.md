@@ -1,6 +1,30 @@
-# 🎧 Clear English Speaking · 给所有人用的英语精听技能
+<div align="center">
 
-> 类别：🗣️ 英语精听 · 🎙️ 影子跟读 · 🤖 Agent 技能 · 💻 本地工具 · 🆓 免费使用
+<img src="assets/icon.svg" width="120" height="120" alt="Clear English Speaking">
+
+# Clear English Speaking
+
+### 给所有人用的英语精听技能 · 把 BBC 6 Minute English 变成双击就能打开的练习页
+
+🗣️ 英语精听&nbsp;&nbsp;·&nbsp;&nbsp;🎙️ 影子跟读&nbsp;&nbsp;·&nbsp;&nbsp;🤖 Agent 技能&nbsp;&nbsp;·&nbsp;&nbsp;💻 本地工具&nbsp;&nbsp;·&nbsp;&nbsp;🆓 免费使用
+
+[![CI](https://img.shields.io/github/actions/workflow/status/Adam-zhaoding/clear-english-speaking/verify.yml?branch=main&label=CI&style=flat-square)](https://github.com/Adam-zhaoding/clear-english-speaking/actions/workflows/verify.yml)
+[![License: MIT](https://img.shields.io/github/license/Adam-zhaoding/clear-english-speaking?style=flat-square&color=0e7a52)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Adam-zhaoding/clear-english-speaking?style=flat-square&color=0e7a52)](https://github.com/Adam-zhaoding/clear-english-speaking/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/Adam-zhaoding/clear-english-speaking?style=flat-square&color=0e7a52)](https://github.com/Adam-zhaoding/clear-english-speaking/commits/main)
+
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-0e7a52?style=flat-square)](scripts/make_lesson.py)
+[![API Key](https://img.shields.io/badge/API%20Key-不需要-0e7a52?style=flat-square)](#)
+[![运行方式](https://img.shields.io/badge/运行方式-100%25%20本地-0e7a52?style=flat-square)](#)
+[![Agent](https://img.shields.io/badge/Agent-Claude%20Code%20%7C%20Codex%20%7C%20WorkBuddy-0e7a52?style=flat-square)](SKILL.md)
+
+</div>
+
+---
+
+> 先把耳朵叫醒，再谈开口。
+
+## 一句话介绍
 
 把 BBC 6 Minute English 的一期节目，变成你电脑上一个**双击就能打开**的英语练习页：
 整集精听（变速、快进快退）+ 3–5 句影子跟读（单句循环、隐藏字幕、看翻译、录音回听）。
@@ -120,6 +144,7 @@ python scripts/make_lesson.py serve
 | `scripts/make_lesson.py` | 备课流水线：`doctor` 装后自检 / `prepare` 取材对齐 / `build` 渲染 / `serve` 本地预览 |
 | `scripts/selftest.py` | 离线自检，改完代码跑一次 |
 | `assets/player-template.html` | 练习页模板 |
+| `assets/icon.svg` | 仓库图标，README 顶部用 |
 
 ## ⌨️ 手动跑（给愿意开终端的人）
 

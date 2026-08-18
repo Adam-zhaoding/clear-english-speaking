@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Clear English Speaking">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="240" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#15a276"/>
+      <stop offset="55%" stop-color="#0f8c5f"/>
+      <stop offset="100%" stop-color="#0a6647"/>
+    </linearGradient>
+    <clipPath id="squircle">
+      <rect x="0" y="0" width="240" height="240" rx="54"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="240" height="240" rx="54" fill="url(#bg)"/>
+
+  <g clip-path="url(#squircle)">
+    <ellipse cx="120" cy="46" rx="150" ry="72" fill="#ffffff" opacity="0.09"/>
+  </g>
+
+  <rect x="6" y="6" width="228" height="228" rx="48" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="3"/>
+
+  <!-- headphone -->
+  <path d="M72,140 Q120,60 168,140" fill="none" stroke="#f5f6f8" stroke-width="16" stroke-linecap="round"/>
+  <rect x="58" y="128" width="27" height="50" rx="13.5" fill="#f5f6f8"/>
+  <rect x="155" y="128" width="27" height="50" rx="13.5" fill="#f5f6f8"/>
+
+  <!-- sound waves off the right ear cup -->
+  <path d="M191,141 Q206,153 191,165" fill="none" stroke="#f5f6f8" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <path d="M191,125 Q219,153 191,181" fill="none" stroke="#f5f6f8" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+</svg>
